@@ -1,0 +1,4 @@
+packages:
+  - "cli"
+  - "engine"
+  - "mcp-server"
