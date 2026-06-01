@@ -1,6 +1,7 @@
 {
   "targets": [
-    "antigravity-ide"
+    "antigravity-ide",
+    "antigravity-cli"
   ],
   "features": [
     "rules",
