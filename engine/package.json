@@ -1,0 +1,16 @@
+{
+  "name": "engine",
+  "version": "1.0.0",
+  "description": "InkJS scenario engine",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "inkjs": "^2.2.0"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "typescript": "^5.4.0"
+  }
+}
