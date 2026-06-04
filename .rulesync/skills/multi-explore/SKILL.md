@@ -1,3 +1,7 @@
+---
+name: multi-explore
+description: 複数AIによるコードベース探索
+---
 # /multi-explore — 複数AIによるコードベース探索
 
 5つのAI CLI（Claude Code / Codex / Copilot / Gemini / Cursor）を並列実行し、異なる観点からコードベースを探索・分析します。

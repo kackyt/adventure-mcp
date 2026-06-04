@@ -1,3 +1,7 @@
+---
+name: assess-impact
+description: 変更影響度評価
+---
 # /assess-impact — 変更影響度評価
 
 変更対象の文書・コードを分析し、影響度を LOW / MEDIUM / HIGH で評価します。HIGH の場合は ADR 作成を促します。

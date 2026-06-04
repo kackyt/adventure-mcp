@@ -1,3 +1,7 @@
+---
+name: create-issue
+description: 仕様バリデーション付き Issue 作成支援
+---
 # /create-issue — 仕様バリデーション付き Issue 作成支援
 
 Issue を作成する際に、仕様の粒度チェックとタスク種別に応じた参照文書の自動提案を行います。

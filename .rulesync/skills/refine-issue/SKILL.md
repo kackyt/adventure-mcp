@@ -1,3 +1,7 @@
+---
+name: refine-issue
+description: 既存 Issue の仕様曖昧さを検出・refine
+---
 # /refine-issue — 既存 Issue の仕様曖昧さを検出・refine
 
 既存の GitHub Issue を入力として、`/create-issue` の 4 観点バリデーションをベースに refine 用途向けへ項目構成を再編した観点で受け入れ条件を検証し、コードベース探索によって「Issue が触れていない論点」を洗い出します。検出した曖昧さは trivial / architectural / critical の 3 階層に分類し、階層に応じて Issue body 更新・コメント投稿・ラベル付与のいずれかを実行します。

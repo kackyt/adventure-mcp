@@ -1,3 +1,7 @@
+---
+name: setup-ai-config
+description: AI開発ツール設定ファイル生成
+---
 # /setup-ai-config — AI開発ツール設定ファイル生成
 
 プロジェクトの `docs/` を基に、各AI開発ツール向けの設定ファイルを生成します。

@@ -1,3 +1,7 @@
+---
+name: ace-curate
+description: ACE サイクル実行（Playbook 増分更新）
+---
 # /ace-curate — ACE サイクル実行（Playbook 増分更新）
 
 マージ後・cleanup 後に PR から知見を抽出し、ACE Playbook に構造化エントリとして追記します。
