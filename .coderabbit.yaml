@@ -40,10 +40,10 @@ reviews:
 
             重要な問題を特定し、解決して全体的なコード品質を向上させることを目指してください。細かい問題は意図的に無視してください。
     auto_review:
-        enabled: true
+        enabled: false
         ignore_title_keywords:
             - "WIP"
             - "DO NOT MERGE"
-        drafts: true
+        drafts: false
 chat:
-    auto_reply: true
+    auto_reply: false
