@@ -9,6 +9,9 @@ catalogs:
     '@biomejs/biome':
       specifier: 2.4.15
       version: 2.4.15
+    typescript:
+      specifier: 6.0.3
+      version: 6.0.3
 
 importers:
 
@@ -16,11 +19,14 @@ importers:
     dependencies:
       rulesync:
         specifier: ^8.23.0
-        version: 8.23.0(valibot@1.4.1(typescript@5.9.3))
+        version: 8.23.0(valibot@1.4.1(typescript@6.0.3))
     devDependencies:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.4.15
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
 
   engine:
     dependencies:
@@ -28,9 +34,12 @@ importers:
         specifier: ^2.2.0
         version: 2.4.0
     devDependencies:
+      '@biomejs/biome':
+        specifier: 'catalog:'
+        version: 2.4.15
       typescript:
-        specifier: ^5.4.0
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 6.0.3
       vitest:
         specifier: ^1.6.0
         version: 1.6.1
@@ -1446,8 +1455,8 @@ packages:
     resolution: {integrity: sha512-faYHw0anBbc/kWF3zFTEnxSFOAGUX9GFbOBthvDdLsIlEoWOFOtS0zgCiQYwIskL9iGXZL3kAXD8OoZ4GmMATA==}
     engines: {node: '>= 18'}
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -1932,9 +1941,9 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
-  '@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@5.9.3))':
+  '@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@6.0.3))':
     dependencies:
-      valibot: 1.4.1(typescript@5.9.3)
+      valibot: 1.4.1(typescript@6.0.3)
 
   '@vitest/expect@1.6.1':
     dependencies:
@@ -2303,7 +2312,7 @@ snapshots:
 
   fast-uri@3.1.2: {}
 
-  fastmcp@3.34.0(@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@5.9.3)))(effect@3.20.0)(sury@10.0.4):
+  fastmcp@3.34.0(@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@6.0.3)))(effect@3.20.0)(sury@10.0.4):
     dependencies:
       '@modelcontextprotocol/sdk': 1.27.1(zod@4.3.6)
       '@standard-schema/spec': 1.1.0
@@ -2315,7 +2324,7 @@ snapshots:
       strict-event-emitter-types: 2.0.0
       undici: 7.26.0
       uri-templates: 0.2.0
-      xsschema: 0.4.4(@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@5.9.3)))(effect@3.20.0)(sury@10.0.4)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)
+      xsschema: 0.4.4(@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@6.0.3)))(effect@3.20.0)(sury@10.0.4)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)
       yargs: 18.0.0
       zod: 4.3.6
       zod-to-json-schema: 3.25.2(zod@4.3.6)
@@ -2813,17 +2822,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  rulesync@8.23.0(valibot@1.4.1(typescript@5.9.3)):
+  rulesync@8.23.0(valibot@1.4.1(typescript@6.0.3)):
     dependencies:
       '@modelcontextprotocol/sdk': 1.27.1(zod@4.3.6)
       '@octokit/request-error': 7.1.0
       '@octokit/rest': 22.0.1
       '@toon-format/toon': 2.1.0
-      '@valibot/to-json-schema': 1.6.0(valibot@1.4.1(typescript@5.9.3))
+      '@valibot/to-json-schema': 1.6.0(valibot@1.4.1(typescript@6.0.3))
       commander: 14.0.3
       effect: 3.20.0
       es-toolkit: 1.45.1
-      fastmcp: 3.34.0(@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@5.9.3)))(effect@3.20.0)(sury@10.0.4)
+      fastmcp: 3.34.0(@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@6.0.3)))(effect@3.20.0)(sury@10.0.4)
       globby: 16.1.1
       gray-matter: 4.0.3
       js-yaml: 4.1.1
@@ -2991,7 +3000,7 @@ snapshots:
       media-typer: 1.1.0
       mime-types: 3.0.2
 
-  typescript@5.9.3: {}
+  typescript@6.0.3: {}
 
   ufo@1.6.4: {}
 
@@ -3009,9 +3018,9 @@ snapshots:
 
   uri-templates@0.2.0: {}
 
-  valibot@1.4.1(typescript@5.9.3):
+  valibot@1.4.1(typescript@6.0.3):
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
 
   vary@1.1.2: {}
 
@@ -3090,9 +3099,9 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  xsschema@0.4.4(@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@5.9.3)))(effect@3.20.0)(sury@10.0.4)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6):
+  xsschema@0.4.4(@valibot/to-json-schema@1.6.0(valibot@1.4.1(typescript@6.0.3)))(effect@3.20.0)(sury@10.0.4)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6):
     optionalDependencies:
-      '@valibot/to-json-schema': 1.6.0(valibot@1.4.1(typescript@5.9.3))
+      '@valibot/to-json-schema': 1.6.0(valibot@1.4.1(typescript@6.0.3))
       effect: 3.20.0
       sury: 10.0.4
       zod: 4.3.6

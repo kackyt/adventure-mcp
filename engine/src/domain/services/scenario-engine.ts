@@ -1,5 +1,5 @@
 import { Story } from "inkjs/engine/Story";
-import { EngineError } from "../../shared/errors/engine-error";
+import { EngineError } from "../../shared/errors/engine-error.ts";
 
 export interface Choice {
   index: number;
