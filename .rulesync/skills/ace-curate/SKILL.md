@@ -11,7 +11,7 @@ description: ACE サイクル実行（Playbook 増分更新）
 - git リポジトリで作業中であること
 - マージ済み（cleanup 済み）の PR が存在すること（直近マージの PR が対象）
 - `docs-template/08-knowledge/PLAYBOOK.md` が存在すること
-- 現在のブランチが `develop` であること（または ACE 専用 `chore/ace-from-pr-<PR番号>` ブランチ）
+- 現在のブランチが `main` であること（または ACE 専用 `chore/ace-from-pr-<PR番号>` ブランチ）
 - **実行タイミング**: マージ後・cleanup 後（develop ブランチで実行）
 
 ## 引数
@@ -115,12 +115,12 @@ ID は **PRスコープ式** `ACE-<PR番号>-<連番>`（例 `ACE-438-1`、非PR
 
 マージ方針の SSOT は [git-workflow.md ステップ10 §運用パターン（マージ方針）](../../docs-template/05-operations/deployment/git-workflow.md#ace-merge-policy)。
 
-**既定（推奨）— develop 直マージ**: develop に直接 commit + push する。
+**既定（推奨）— main 直マージ**: main に直接 commit + push する。
 
 ```bash
 git add docs-template/08-knowledge/PLAYBOOK.md
 git commit -m "knowledge: ACE-<PR番号>-<連番> [category] [summary]"
-git push origin develop
+git push origin main
 ```
 
 **任意エスカレーション — chore PR**: 大人数チーム / 知見レビューを残したい場合のみ `chore/ace-from-pr-<PR番号>` ブランチで小さい PR を作成。
@@ -134,7 +134,7 @@ gh pr create --base develop --title "knowledge: ACE-<PR番号>-<連番> [categor
 # レビュー後 squash merge → /merge-cleanup
 ```
 
-> `knowledge:` 付き PLAYBOOK 単独コミットの develop 直 push は意図的フローであり、[ACE-012](../../docs-template/08-knowledge/PLAYBOOK.md#ace-012)（うっかり develop 直 push の事故防止）とは別物。
+> `knowledge:` 付き PLAYBOOK 単独コミットの main 直 push は意図的フローであり、[ACE-012](../../docs-template/08-knowledge/PLAYBOOK.md#ace-012)（うっかり main 直 push の事故防止）とは別物。
 
 ### 6. 結果レポート
 
