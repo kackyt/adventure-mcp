@@ -9,7 +9,7 @@
  * - エラーコードは定数化しマジック文字列を避ける。
  */
 
-export const ERROR_CODE_EXAMPLE = 'EXAMPLE_ERROR' as const;
+export const ERROR_CODE_EXAMPLE = "EXAMPLE_ERROR" as const;
 
 export class AppError extends Error {
   public readonly code: string;

@@ -1,18 +1,7 @@
 {
-  "targets": [
-    "antigravity-ide",
-    "antigravity-cli"
-  ],
-  "features": [
-    "rules",
-    "ignore",
-    "commands",
-    "skills",
-    "subagents"
-  ],
-  "baseDirs": [
-    "."
-  ],
+  "targets": ["antigravity-ide", "antigravity-cli"],
+  "features": ["rules", "ignore", "commands", "skills", "subagents"],
+  "baseDirs": ["."],
   "delete": false,
   "verbose": false,
   "experimentalGlobal": false,

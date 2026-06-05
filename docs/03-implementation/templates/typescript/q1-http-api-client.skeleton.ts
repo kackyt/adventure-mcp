@@ -42,9 +42,7 @@ function buildMaskedLogContext(url: string): { url: string } {
   return { url };
 }
 
-export function createExternalApiClient(
-  config: ExternalApiClientConfig,
-): {
+export function createExternalApiClient(config: ExternalApiClientConfig): {
   fetchJson: <T>(path: string) => Promise<HttpClientResult<T>>;
 } {
   return {
@@ -59,7 +57,7 @@ export function createExternalApiClient(
         }, HTTP_CLIENT_TIMEOUT_MS);
         try {
           const res = await fetch(target, {
-            method: 'GET',
+            method: "GET",
             headers: auth ? { Authorization: auth } : {},
             signal: controller.signal,
           });
@@ -69,7 +67,7 @@ export function createExternalApiClient(
             lastError = {
               ok: false,
               errorCode: `HTTP_${String(res.status)}`,
-              message: 'Upstream API error',
+              message: "Upstream API error",
             };
             if (res.status === HTTP_STATUS_TOO_MANY_REQUESTS && attempt < HTTP_CLIENT_MAX_RETRIES) {
               await delay(HTTP_CLIENT_RETRY_BASE_DELAY_MS * (attempt + 1));
@@ -84,15 +82,14 @@ export function createExternalApiClient(
           const logContext = buildMaskedLogContext(target);
           // TODO: 実装時は structuredLogger.warn('HTTP client failed', logContext) 等へ渡す。
           void logContext;
-          const message = cause instanceof Error ? cause.message : 'Unknown error';
-          lastError = { ok: false, errorCode: 'HTTP_CLIENT_FAILED', message };
+          const message = cause instanceof Error ? cause.message : "Unknown error";
+          lastError = { ok: false, errorCode: "HTTP_CLIENT_FAILED", message };
           if (attempt < HTTP_CLIENT_MAX_RETRIES) {
             await delay(HTTP_CLIENT_RETRY_BASE_DELAY_MS * (attempt + 1));
-            continue;
           }
         }
       }
-      return lastError ?? { ok: false, errorCode: 'HTTP_CLIENT_FAILED', message: 'Unknown error' };
+      return lastError ?? { ok: false, errorCode: "HTTP_CLIENT_FAILED", message: "Unknown error" };
     },
   };
 }

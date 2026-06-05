@@ -1,2 +1,2 @@
-export * from './domain/ScenarioEngine';
-export * from './domain/error/EngineError';
+export * from "./domain/services/scenario-engine.ts";
+export * from "./shared/errors/engine-error.ts";
