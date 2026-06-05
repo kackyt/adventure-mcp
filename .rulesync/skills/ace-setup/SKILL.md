@@ -1,3 +1,7 @@
+---
+name: ace-setup
+description: ACE フレームワーク セットアップ
+---
 # /ace-setup — ACE フレームワーク セットアップ
 
 プロジェクトに ACE (Agentic Context Engineering) フレームワークをセットアップします。

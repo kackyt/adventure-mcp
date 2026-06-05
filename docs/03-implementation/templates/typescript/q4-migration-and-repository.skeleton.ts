@@ -12,6 +12,6 @@
 // 本ファイルは「リポジトリ側の変更着手点」のメモ用。実際の DDL は migrations/*.sql へ。
 
 export const MIGRATION_CHECKLIST = [
-  'Add forward migration SQL under migrations/',
-  'Update repository mapping only in infrastructure/repositories/',
+  "Add forward migration SQL under migrations/",
+  "Update repository mapping only in infrastructure/repositories/",
 ] as const;

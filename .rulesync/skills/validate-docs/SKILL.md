@@ -1,3 +1,7 @@
+---
+name: validate-docs
+description: AI仕様駆動開発ドキュメント検証
+---
 # /validate-docs — AI仕様駆動開発ドキュメント検証
 
 プロジェクトの `docs/` ディレクトリが AI仕様駆動開発のコア7文書要件を満たしているか検証します。

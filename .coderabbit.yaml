@@ -1,0 +1,49 @@
+language: "ja"
+early_access: false
+reviews:
+    request_changes_workflow: false
+    high_level_summary: true
+    poem: true
+    review_status: true
+    collapse_walkthrough: false
+    path_filters:
+        - "!**/*.json*"
+        - "!**/*.md"
+        - "!**/*.yaml"
+        - "!**/*.d.ts"
+    path_instructions:
+        - path: "**/*.ts"
+          instructions: |
+            あなたの目的は、非常に経験豊富なソフトウェアエンジニアとして機能し、コードの一部を徹底的にレビューし、
+            以下のようなキーエリアを改善するためのコードスニペットを提案することです
+
+            | 重要度 | チェック観点 | 根拠（docs\03-implementation\CONVENTIONS.md） |
+            |--------|-------------|--------------------------|
+            | 🔴 CRITICAL | ドメイン層・インフラ層ではドメインエラー を使うべき | エラーハンドリング規約 |
+            | 🔴 CRITICAL | アプリ層がインフラ層の具体型に直接依存している | DI原則 |
+            | 🔴 CRITICAL | ロジック変更にテストが伴っていない | テスト戦略 |
+            | 🔴 CRITICAL | **[アーキテクチャ境界違反]** ドメイン層（`engine/src/domain/`）がインフラ層（`infrastructure/`）のモジュールを `import` している | オニオンアーキテクチャ：依存は内側に向かう |
+            | 🔴 CRITICAL | **[アーキテクチャ境界違反]** ドメイン層がアプリケーション層（`engine/src/application/`）のモジュールを `import` している | オニオンアーキテクチャ：ドメインはすべての層から独立 |
+            | 🔴 CRITICAL | **[アーキテクチャ境界違反]** Repository の具象実装が `infrastructure/src/persistence/` 以外（例: `engine/src/domain/`）に配置されている | ヘキサゴナルアーキテクチャ：ポートはドメイン、アダプタ（実装）はインフラ |
+            | 🔴 CRITICAL | **[アーキテクチャ境界違反]** Usecase/Application Service が `engine/src/application/usecase/` 以外に実装されている | オニオンアーキテクチャ：Usecaseの配置規約 |
+            | 🔴 CRITICAL | **[DDDドメインモデル違反]** ビジネスロジック（不変条件の保護、状態遷移）がドメインモデル外（Usecase や infrastructure）に漏れている | DDD：ドメインモデルが不変条件を内包すること |
+            | 🔴 CRITICAL | **[DDDドメインモデル違反]** 複数のエンティティ/集約にまたがるロジックが Usecase に直接記述されており、Domain Service として分離されていない | DDD：Domain Service（`engine/src/domain/service/`）を使うこと |
+            | 🔴 CRITICAL | **[DDDドメインモデル違反]** Repository の Interface（Trait） が `engine/src/domain/repository/` 以外に定義されている | DDD：RepositoryインターフェースはDomain層が所有する |
+            | 🔴 CRITICAL | **[ヘキサゴナルアーキテクチャ違反]** プレゼンテーション層（`mcp-server/src/presentation/`）が Usecase を経由せずドメインモデルや Repository を直接呼び出している | ヘキサゴナル：外部からの入力はUsecase（ポート経由）でのみ受け付ける |
+            | 🔴 CRITICAL | **[Composition Root違反]** DI（依存の組み立て）が `mcp-server/src/index.ts` 以外で行われている | Composition Root原則 |
+            | 🟡 HIGH | 日本語コメントがない、または意図がわからないコメントのみ | コードスタイル規約 |
+            | 🟡 HIGH | リソースのライフサイクルが不明瞭 | メモリライフサイクル規約 |
+            | 🟡 HIGH | SOLID原則違反（単一責任・開放閉鎖など） | SOLID/DRY原則 |
+            | 🟡 HIGH | DRY違反（重複ロジック） | SOLID/DRY原則 |
+            | 🟡 HIGH | **[DDDドメインモデル]** DTO（`engine/src/application/dto/`）とドメインモデルの境界が曖昧（Entityが直接プレゼンテーション層に返される等） | DDD：DTO変換はApplication層で行う |
+            | 🟡 HIGH | **[DDDドメインモデル]** 集約ルート（Aggregate Root）を経由せずに集約内部のエンティティを外部から直接変更している | DDD：集約の整合性境界の維持 |
+
+            重要な問題を特定し、解決して全体的なコード品質を向上させることを目指してください。細かい問題は意図的に無視してください。
+    auto_review:
+        enabled: false
+        ignore_title_keywords:
+            - "WIP"
+            - "DO NOT MERGE"
+        drafts: false
+chat:
+    auto_reply: false

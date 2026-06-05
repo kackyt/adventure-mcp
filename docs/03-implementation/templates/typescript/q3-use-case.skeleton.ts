@@ -9,9 +9,7 @@
  * - 複数集約の整合性はドメインイベント / サガ要件と照合する。
  */
 
-export type UseCaseResult<T> =
-  | { ok: true; value: T }
-  | { ok: false; reason: string };
+export type UseCaseResult<T> = { ok: true; value: T } | { ok: false; reason: string };
 
 export async function exampleUseCase(_input: unknown): Promise<UseCaseResult<null>> {
   // TODO: orchestrate repositories + domain services

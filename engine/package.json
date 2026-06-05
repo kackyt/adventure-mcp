@@ -1,0 +1,22 @@
+{
+  "name": "engine",
+  "version": "1.0.0",
+  "description": "InkJS scenario engine",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "inkjs": "^2.2.0"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "typescript": "catalog:",
+    "@biomejs/biome": "catalog:"
+  }
+}

@@ -1,4 +1,6 @@
 ---
+name: init-docs
+description: AI仕様駆動開発ドキュメント初期化
 trigger: /init-docs
 turbo: true
 ---

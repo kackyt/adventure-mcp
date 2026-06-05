@@ -1,3 +1,7 @@
+---
+name: pre-commit-check
+description: 仕様準拠の事前チェック
+---
 # /pre-commit-check — 仕様準拠の事前チェック
 
 コミット前に、変更内容が MASTER.md のルールおよびプロジェクト仕様に準拠しているか確認します。

@@ -1,3 +1,7 @@
+---
+name: multi-review
+description: 複数AIによるクロスモデルレビュー実行
+---
 # /multi-review — 複数AIによるクロスモデルレビュー実行
 
 5つのAI CLI（Claude Code / Codex / Copilot / Gemini / Cursor）を並列実行し、異なる観点からコードレビューを実行します。
