@@ -1,11 +1,11 @@
-﻿---
+---
 title: "PLAYBOOK"
-version: "1.0.0"
+version: "1.1.0"
 status: "approved"
 created: "2026-06-01"
-updated: "2026-06-01"
+updated: "2026-06-05"
 owner: "kacky"
-ace_entry_count: 0
+ace_entry_count: 3
 tags: [ace, playbook, knowledge-management]
 references:
   - docs/ACE_FRAMEWORK.md
@@ -179,3 +179,59 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 **Action**: 一覧取得時は `include` オプションで関連を一括取得する。`findMany({ include: { organization: true } })`
 -->
 
+<a id="ace-4-1"></a>
+
+### ACE-4-1: tsconfigの `noEmit` とディレクトリ設定の競合
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | tooling   |
+| Origin     | PR #4 |
+| Date       | 2026-06-05 |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: tsconfig.jsonで `noEmit: true`（型チェックのみ実施）とする場合、`outDir` や `rootDir` を指定すると設定が未使用となり混乱の元になる。
+
+**Context**: TypeScriptのビルドを別ツール（tsxやesbuild等）で行うプロジェクトにおいて、出力先の設定が不要に残っていた。
+
+**Action**: `noEmit: true` を設定する際は、`outDir` と `rootDir` の項目を削除し、設定を最小限に保つこと。
+
+<a id="ace-4-2"></a>
+
+### ACE-4-2: 自動レビューツールでの過剰な除外パス設定の罠
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | tooling   |
+| Origin     | PR #4 |
+| Date       | 2026-06-05 |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: `.coderabbit.yaml` などのレビュー除外パスに `!**/*.md` や `!**/*.yaml` などを指定すると、Playbookや設定ファイルなどの重要なガバナンスドキュメントもレビューされなくなる。
+
+**Context**: PRでツールの設定ファイルやドキュメントを更新したのに、広範な拡張子除外により自動レビューがスキップされた。
+
+**Action**: 除外対象は拡張子による広範な指定ではなく、`node_modules`、`dist`、`build` や生成ファイル（例: `*.generated.yaml`）などのノイジーなパスに限定する。
+
+<a id="ace-4-3"></a>
+
+### ACE-4-3: サブプロセス実行時のコマンドバリデーション
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | security   |
+| Origin     | PR #4 |
+| Date       | 2026-06-05 |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: `subprocess.run` 等で外部コマンドを呼び出す際、任意の入力をそのまま渡すと意図しないコマンドが実行されるリスクがある。
+
+**Context**: スクリプト内のコマンド実行ラッパー関数において、入力が未検証のまま実行される状態になっていた。
+
+**Action**: サブプロセス呼び出し前に、実行可能なコマンド（例: `gh` のみ）をホワイトリスト等でバリデーションする処理を入れる。
