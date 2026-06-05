@@ -1,7 +1,7 @@
 import { Compiler } from "inkjs/compiler/Compiler";
 import { beforeEach, describe, expect, it } from "vitest";
-import { EngineError } from "../../shared/errors/engine-error";
-import { ScenarioEngine } from "./scenario-engine";
+import { EngineError } from "../../shared/errors/engine-error.ts";
+import { ScenarioEngine } from "./scenario-engine.ts";
 
 const inkSource = `
 VAR player_hp = 100
@@ -23,7 +23,11 @@ describe("ScenarioEngine", () => {
 
   beforeEach(() => {
     const compiler = new Compiler(inkSource);
-    storyJson = compiler.Compile().ToJson();
+    const json = compiler.Compile().ToJson();
+    if (!json) {
+      throw new Error("Compilation failed");
+    }
+    storyJson = json;
   });
 
   it("should continue story and return text", () => {
