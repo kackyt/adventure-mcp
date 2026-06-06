@@ -29,7 +29,7 @@ function findInkFiles(dir: string): string[] {
   return results;
 }
 
-function main() {
+function main(): void {
   const inkFiles = findInkFiles(assetsDir);
 
   if (inkFiles.length === 0) {
@@ -54,7 +54,7 @@ function main() {
     } else {
       const generatedJson = `${file}.json`;
       if (existsSync(generatedJson)) {
-        // If the target file already exists, remove it first to avoid conflicts
+        // 出力先ファイルが既に存在する場合は、競合を避けるために先に削除する
         if (generatedJson !== targetJson && existsSync(targetJson)) {
           unlinkSync(targetJson);
         }
