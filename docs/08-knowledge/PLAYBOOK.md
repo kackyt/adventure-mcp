@@ -1,11 +1,11 @@
 ---
 title: "PLAYBOOK"
-version: "1.1.0"
+version: "1.2.0"
 status: "approved"
 created: "2026-06-01"
-updated: "2026-06-05"
+updated: "2026-06-06"
 owner: "kacky"
-ace_entry_count: 3
+ace_entry_count: 6
 tags: [ace, playbook, knowledge-management]
 references:
   - docs/ACE_FRAMEWORK.md
@@ -235,3 +235,61 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 **Context**: スクリプト内のコマンド実行ラッパー関数において、入力が未検証のまま実行される状態になっていた。
 
 **Action**: サブプロセス呼び出し前に、実行可能なコマンド（例: `gh` のみ）をホワイトリスト等でバリデーションする処理を入れる。
+
+<a id="ace-5-1"></a>
+
+### ACE-5-1: 関数の明示的な戻り値型の指定
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | coding       |
+| Origin     | PR #5        |
+| Date       | 2026-06-06   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: 関数の戻り値型は `void` であっても明示的に定義することがスタイルガイドで必須とされている。
+
+**Context**: TypeScriptスクリプトにて `function main() { ... }` の戻り値型が省略されたため、レビューで指摘された。
+
+**Action**: 関数を定義する際は、戻り値がない場合でも `function main(): void { ... }` のように型を明示する。
+
+<a id="ace-5-2"></a>
+
+### ACE-5-2: コード内コメントの日本語記述の徹底
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | coding       |
+| Origin     | PR #5        |
+| Date       | 2026-06-06   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: ロジックの内容を説明するソースコード上のインラインコメントは日本語で記述する。
+
+**Context**: スクリプト内のコメントが英語で記述されていたため、日本語にするようレビューで指摘された。
+
+**Action**: コメントを記述する際は、AI自身への説明や英語圏の慣習に引っ張られず、プロジェクトのスタイルガイドに従って日本語で記述する。
+
+<a id="ace-5-3"></a>
+
+### ACE-5-3: Node.jsネイティブ機能 (Type Strip) の優先利用
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | architecture |
+| Origin     | PR #5        |
+| Date       | 2026-06-06   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: TypeScript ファイルの実行には、外部ツール（`tsx` など）よりも Node.js のネイティブ機能 (`--experimental-strip-types` または `node` コマンドの直接実行) の利用が優先される。
+
+**Context**: `package.json` のスクリプトで `.ts` ファイルを直接 `node` で実行する設定に対し、AIレビュアーが `tsx` の使用を推奨したが、プロジェクト方針に従い不要とされた。
+
+**Action**: スクリプト実行環境を追加する際は、可能な限りバンドラーや `tsx` などの外部ツールに依存せず、最新の Node.js の機能を利用する構成にする。
+
