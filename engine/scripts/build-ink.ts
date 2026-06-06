@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { readdirSync, statSync, existsSync, renameSync, unlinkSync } from "node:fs";
+import { existsSync, readdirSync, renameSync, statSync, unlinkSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -8,9 +8,10 @@ const __dirname = dirname(__filename);
 
 const assetsDir = resolve(__dirname, "../assets");
 
-const compilerBin = process.platform === "win32"
-  ? resolve(__dirname, "../node_modules/.bin/inkjs-compiler.cmd")
-  : resolve(__dirname, "../node_modules/.bin/inkjs-compiler");
+const compilerBin =
+  process.platform === "win32"
+    ? resolve(__dirname, "../node_modules/.bin/inkjs-compiler.cmd")
+    : resolve(__dirname, "../node_modules/.bin/inkjs-compiler");
 
 function findInkFiles(dir: string): string[] {
   if (!existsSync(dir)) return [];
@@ -19,7 +20,7 @@ function findInkFiles(dir: string): string[] {
   for (const file of list) {
     const filePath = join(dir, file);
     const stat = statSync(filePath);
-    if (stat && stat.isDirectory()) {
+    if (stat?.isDirectory()) {
       results = results.concat(findInkFiles(filePath));
     } else if (file.endsWith(".ink")) {
       results.push(filePath);
@@ -51,14 +52,14 @@ function main() {
       console.error(result.stdout || result.stderr);
       hasError = true;
     } else {
-      const generatedJson = file + ".json";
+      const generatedJson = `${file}.json`;
       if (existsSync(generatedJson)) {
         // If the target file already exists, remove it first to avoid conflicts
         if (generatedJson !== targetJson && existsSync(targetJson)) {
-            unlinkSync(targetJson);
+          unlinkSync(targetJson);
         }
         if (generatedJson !== targetJson) {
-            renameSync(generatedJson, targetJson);
+          renameSync(generatedJson, targetJson);
         }
       }
       console.log(`Successfully compiled: ${targetJson}`);
