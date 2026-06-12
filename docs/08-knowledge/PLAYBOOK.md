@@ -1,11 +1,11 @@
 ---
 title: "PLAYBOOK"
-version: "1.2.0"
+version: "1.3.0"
 status: "approved"
 created: "2026-06-01"
-updated: "2026-06-06"
+updated: "2026-06-13"
 owner: "kacky"
-ace_entry_count: 6
+ace_entry_count: 8
 tags: [ace, playbook, knowledge-management]
 references:
   - docs/ACE_FRAMEWORK.md
@@ -293,3 +293,40 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 
 **Action**: スクリプト実行環境を追加する際は、可能な限りバンドラーや `tsx` などの外部ツールに依存せず、最新の Node.js の機能を利用する構成にする。
 
+<a id="ace-6-1"></a>
+
+### ACE-6-1: Inkフォールバック選択肢の遷移先の明示
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | coding       |
+| Origin     | PR #6        |
+| Date       | 2026-06-13   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: Ink のシナリオでフォールバック選択肢（常に表示される選択肢）を記述する際、遷移先（divert target, `->`）を明示しないと文法エラーやコンパイルエラーの原因になる。
+
+**Context**: PR #6 のドキュメント作成時、`+` のみのフォールバック選択肢に遷移先が指定されていない例があり、AI レビュアーから構文上の問題として指摘された。
+
+**Action**: フォールバック選択肢を記述する際は、`+ -> fallback_knot` のように必ず遷移先ノットを指定し、デッドエンドを避ける構成にする。
+
+<a id="ace-6-2"></a>
+
+### ACE-6-2: InkとMCP間の状態管理の責務分担
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | architecture |
+| Origin     | PR #6        |
+| Date       | 2026-06-13   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: アイテム取得やフラグ更新などの状態遷移は、AI（MCP側）に委ねずすべて Ink 側（`.ink` ファイル内）の変数操作として完結させる。
+
+**Context**: PR #6 の Ink シナリオ作成ガイドにて、AI はエンジンが提示した選択肢から選ぶだけであり、状態更新は自律的に行わないという設計原則が明文化された。
+
+**Action**: シナリオ開発時は、AI による状態更新アクションを設計せず、フラグやステータスの変更は必ず `~ has_key = true` のように Ink 内の記述として実装する。
