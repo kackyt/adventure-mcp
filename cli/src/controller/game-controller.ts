@@ -17,7 +17,7 @@ export class GameController {
   private selectedIndex = 0;
   private commandBuffer = "";
   private message: ViewMessage | null = null;
-  private statusVisible = true;
+  private statusVisible = false;
   private exited = false;
 
   constructor(private readonly engine: PlayableEngine) {

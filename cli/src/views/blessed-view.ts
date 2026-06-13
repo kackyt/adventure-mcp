@@ -149,7 +149,7 @@ export class BlessedView implements GameView {
 
     if (vm.ended) {
       this.choicesBox.setContent(
-        "{yellow-fg}━━━ 物語は終わりを迎えた ━━━{/yellow-fg}\n{gray-fg}（Enter または q で終了）{/gray-fg}",
+        "{yellow-fg}━━━ 終わり ━━━{/yellow-fg}\n{gray-fg}（Enter または q で終了）{/gray-fg}",
       );
     } else {
       const choiceLines = vm.choices.map((choice, i) => {
