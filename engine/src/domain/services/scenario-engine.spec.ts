@@ -59,6 +59,15 @@ describe("ScenarioEngine", () => {
     expect(engine.getVariable("player_hp")).toBe(50);
   });
 
+  it("should get a snapshot of all variables", () => {
+    const engine = new ScenarioEngine(storyJson);
+    const vars = engine.getVariables();
+    expect(vars).toHaveProperty("player_hp", 100);
+
+    engine.setVariable("player_hp", 30);
+    expect(engine.getVariables().player_hp).toBe(30);
+  });
+
   it("should throw EngineError on invalid JSON", () => {
     expect(() => new ScenarioEngine({ invalid: "data" })).toThrow(EngineError);
   });

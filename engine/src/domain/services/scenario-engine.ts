@@ -70,6 +70,23 @@ export class ScenarioEngine {
   }
 
   /**
+   * 現在の全グローバル変数のスナップショットを取得します。
+   * @returns 変数名をキー、現在値を値とするオブジェクト
+   */
+  public getVariables(): Record<string, unknown> {
+    try {
+      const state = this.story.variablesState;
+      const snapshot: Record<string, unknown> = {};
+      for (const name of Object.keys(state)) {
+        snapshot[name] = state[name];
+      }
+      return snapshot;
+    } catch (e) {
+      throw new EngineError("Failed to get variables", e);
+    }
+  }
+
+  /**
    * 指定された名前の変数から値を取得します。
    * @param name 変数名
    */
