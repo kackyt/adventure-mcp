@@ -2,7 +2,7 @@ import blessed from "neo-blessed";
 import type { GameController } from "../controller/game-controller.ts";
 import type { Action, ViewModel } from "../controller/view-model.ts";
 import { translateKey } from "./blessed-keys.ts";
-import type { GameView } from "./game-view.ts";
+import type { IGameView } from "./game-view.interface.ts";
 
 const HELP_LINE =
   "[↑↓: 選択  Enter: 決定  数字: 直接選択  : コマンド(:get/:set/:vars)  q/Esc: 終了]";
@@ -14,7 +14,7 @@ const HELP_LINE =
  * 持ち、コントローラの ViewModel を毎キー描画する。キー入力は Action に翻訳して
  * コントローラへ渡すだけの薄いアダプタ。
  */
-export class BlessedView implements GameView {
+export class BlessedView implements IGameView {
   private readonly screen: blessed.Widgets.Screen;
   private readonly statusBox: blessed.Widgets.BoxElement;
   private readonly sceneBox: blessed.Widgets.BoxElement;

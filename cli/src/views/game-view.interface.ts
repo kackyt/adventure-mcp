@@ -7,7 +7,7 @@ import type { GameController } from "../controller/game-controller.ts";
  * 各 View は自身のループを持ち、コントローラを駆動する。コントローラの
  * `exitRequested` が立つか入力が尽きたら、終了コードで解決する。
  */
-export interface GameView {
+export interface IGameView {
   /** コントローラを駆動し、終了コードを返す。 */
   run(controller: GameController): Promise<number>;
   /** 端末状態の復元など後始末を行う（多重呼び出し安全）。 */

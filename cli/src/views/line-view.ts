@@ -1,7 +1,7 @@
 import * as readline from "node:readline/promises";
 import type { GameController } from "../controller/game-controller.ts";
 import { formatChoices, formatError, formatPassage } from "./formatter.ts";
-import type { GameView } from "./game-view.ts";
+import type { IGameView } from "./game-view.interface.ts";
 
 /**
  * line View が必要とする入出力の抽象。
@@ -22,7 +22,7 @@ export interface LineIO {
  * 非TTY（パイプ / リダイレクト / `--plain`）向けの行ベース View。
  * 全画面 TUI と同じコントローラを駆動するが、表示は行の追記、入力は 1 行ごと。
  */
-export class LineView implements GameView {
+export class LineView implements IGameView {
   private lastScene: string | null = null;
   private lastMessage: unknown = undefined;
 
@@ -101,7 +101,7 @@ export function createReadlineIO(): LineIO {
   });
 
   return {
-    prompt(question) {
+    prompt(question: string): Promise<string | null> {
       process.stdout.write(question);
       const next = buffered.shift();
       if (next !== undefined) {
@@ -112,13 +112,13 @@ export function createReadlineIO(): LineIO {
       }
       return new Promise((resolve) => waiters.push(resolve));
     },
-    write(line) {
+    write(line: string): void {
       process.stdout.write(`${line}\n`);
     },
-    writeError(line) {
+    writeError(line: string): void {
       process.stderr.write(`${line}\n`);
     },
-    close() {
+    close(): void {
       rl.close();
     },
   };

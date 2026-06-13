@@ -4,7 +4,7 @@ import { EngineError, ScenarioEngine } from "engine";
 import { GameController } from "./controller/game-controller.ts";
 import { BlessedView } from "./views/blessed-view.ts";
 import { formatError } from "./views/formatter.ts";
-import type { GameView } from "./views/game-view.ts";
+import type { IGameView } from "./views/game-view.interface.ts";
 import { createLineView } from "./views/line-view.ts";
 
 const USAGE = "使い方: adventure-cli [--plain] <コンパイル済み Ink シナリオ (.json) へのパス>";
@@ -57,10 +57,14 @@ async function main(): Promise<number> {
 
   const controller = new GameController(engine);
   const useTui = !plain && Boolean(process.stdout.isTTY) && Boolean(process.stdin.isTTY);
-  const view: GameView = useTui ? new BlessedView() : createLineView();
+  const view: IGameView = useTui ? new BlessedView() : createLineView();
 
   // どの経路で抜けても端末を必ず復元する
   const cleanup = () => view.destroy();
+  process.once("SIGINT", () => {
+    cleanup();
+    process.exit(0);
+  });
   process.once("SIGTERM", () => {
     cleanup();
     process.exit(0);
