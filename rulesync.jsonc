@@ -1,5 +1,5 @@
 {
-  "targets": ["antigravity-ide", "antigravity-cli"],
+  "targets": ["antigravity-ide", "antigravity-cli", "claudecode"],
   "features": ["rules", "ignore", "commands", "skills", "subagents"],
   "baseDirs": ["."],
   "delete": false,
