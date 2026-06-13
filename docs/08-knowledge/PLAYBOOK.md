@@ -1,11 +1,11 @@
 ---
 title: "PLAYBOOK"
-version: "1.3.0"
+version: "1.4.0"
 status: "approved"
 created: "2026-06-01"
 updated: "2026-06-13"
 owner: "kacky"
-ace_entry_count: 8
+ace_entry_count: 10
 tags: [ace, playbook, knowledge-management]
 references:
   - docs/ACE_FRAMEWORK.md
@@ -330,3 +330,41 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 **Context**: PR #6 の Ink シナリオ作成ガイドにて、AI はエンジンが提示した選択肢から選ぶだけであり、状態更新は自律的に行わないという設計原則が明文化された。
 
 **Action**: シナリオ開発時は、AI による状態更新アクションを設計せず、フラグやステータスの変更は必ず `~ has_key = true` のように Ink 内の記述として実装する。
+
+<a id="ace-8-1"></a>
+
+### ACE-8-1: TUI使用時のクリーンアップ処理の徹底
+
+| フィールド | 値           |
+| ---------- | ------------ |
+| Category   | coding       |
+| Origin     | PR #8        |
+| Date       | 2026-06-13   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: TUIライブラリ（neo-blessed等）を使用する際、強制終了時の画面クリーンアップ処理を怠るとターミナルの表示が崩れる原因となる。
+
+**Context**: PR #8で全画面TUIを導入した際、`Ctrl+C` (SIGINT) で終了するとターミナルが乱れたままになる問題がAIレビューで指摘された。
+
+**Action**: `process.on("SIGINT", () => { screen.destroy(); process.exit(0); })` のようにシグナルハンドラを設定し、終了時に確実なクリーンアップを行うこと。
+
+<a id="ace-8-2"></a>
+
+### ACE-8-2: ヘッドレスコントローラによるUI依存の排除
+
+| フィールド | 値           |
+| ---------- | ------------ |
+| Category   | architecture |
+| Origin     | PR #8        |
+| Date       | 2026-06-13   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: TUI等のUIツールを導入する際は、表示層（View）とゲーム進行ロジック（Controller）を分離し、UIに依存しないテストが可能な設計にする。
+
+**Context**: PR #8で対話CLIを行ベースから全画面TUIへ移行した際、ゲームの進行管理をヘッドレスな `GameController` に分離することで堅牢なユニットテストを実現した。
+
+**Action**: UIを持つツールを実装する際は、ロジックを直接Viewに記述せず、ヘッドレスで動作するController層を設ける。
