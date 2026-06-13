@@ -4,5 +4,6 @@ packages:
   - "mcp-server"
 catalog:
   "@biomejs/biome": "2.4.15"
+  "@types/node": "^22.13.14"
   typescript: "6.0.3"
 

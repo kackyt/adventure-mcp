@@ -1,0 +1,27 @@
+{
+  "name": "cli",
+  "version": "1.0.0",
+  "description": "対話型デバッグ用 CLI フロントエンド",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "adventure-cli": "src/index.ts"
+  },
+  "scripts": {
+    "start": "node --experimental-transform-types --disable-warning=ExperimentalWarning src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "^1.6.0"
+  }
+}
