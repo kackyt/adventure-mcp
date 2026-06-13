@@ -92,6 +92,25 @@ describe("GameController", () => {
     expect(vm.status.variables).toEqual({ has_key: false, hp: 100 });
   });
 
+  it("ステータスは既定で表示、:vars でトグル、on/off で明示切替", () => {
+    const c = new GameController(new FakeEngine([{ texts: ["S"], choices: ["go"] }], { hp: 1 }));
+    expect(c.getViewModel().status.visible).toBe(true);
+
+    c.apply({ type: "runCommand", raw: ":vars" });
+    expect(c.getViewModel().status.visible).toBe(false);
+    expect(c.getViewModel().message).toEqual({ kind: "info", text: "変数表示: OFF" });
+
+    c.apply({ type: "runCommand", raw: ":vars" });
+    expect(c.getViewModel().status.visible).toBe(true);
+
+    c.apply({ type: "runCommand", raw: ":vars off" });
+    expect(c.getViewModel().status.visible).toBe(false);
+    c.apply({ type: "runCommand", raw: ":vars off" }); // 冪等
+    expect(c.getViewModel().status.visible).toBe(false);
+    c.apply({ type: "runCommand", raw: ":vars on" });
+    expect(c.getViewModel().status.visible).toBe(true);
+  });
+
   it("moveDown/moveUp でハイライトが移動し範囲外には出ない", () => {
     const c = new GameController(new FakeEngine([{ texts: ["分岐。"], choices: ["A", "B"] }]));
 

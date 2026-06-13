@@ -36,7 +36,7 @@ export interface ViewChoice {
  */
 export interface ViewModel {
   mode: ViewMode;
-  status: { variables: Record<string, unknown> };
+  status: { variables: Record<string, unknown>; visible: boolean };
   scene: string;
   choices: ViewChoice[];
   command: { active: boolean; buffer: string };

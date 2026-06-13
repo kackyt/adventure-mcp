@@ -17,6 +17,7 @@ export class GameController {
   private selectedIndex = 0;
   private commandBuffer = "";
   private message: ViewMessage | null = null;
+  private statusVisible = true;
   private exited = false;
 
   constructor(private readonly engine: PlayableEngine) {
@@ -75,7 +76,7 @@ export class GameController {
   getViewModel(): ViewModel {
     return {
       mode: this.mode,
-      status: { variables: this.engine.getVariables() },
+      status: { variables: this.engine.getVariables(), visible: this.statusVisible },
       scene: this.currentScene,
       choices: this.choices.map((choice, i) => ({
         label: choice.text,
@@ -161,6 +162,13 @@ export class GameController {
         break;
       case "setVar":
         this.handleSetVar(command.name, command.value);
+        break;
+      case "toggleVars":
+        this.statusVisible = command.value ?? !this.statusVisible;
+        this.message = {
+          kind: "info",
+          text: `変数表示: ${this.statusVisible ? "ON" : "OFF"}`,
+        };
         break;
       case "choice":
         this.selectIndex(command.index);

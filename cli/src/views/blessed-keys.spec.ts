@@ -5,7 +5,7 @@ import { translateKey } from "./blessed-keys.ts";
 function vm(overrides: Partial<ViewModel> = {}): ViewModel {
   return {
     mode: "choosing",
-    status: { variables: {} },
+    status: { variables: {}, visible: true },
     scene: "",
     choices: [],
     command: { active: false, buffer: "" },

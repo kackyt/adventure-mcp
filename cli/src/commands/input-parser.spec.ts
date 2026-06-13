@@ -68,6 +68,16 @@ describe("parseInput", () => {
   it("未知の : コマンドは invalid を返す", () => {
     expect(parseInput(":foo").kind).toBe("invalid");
   });
+
+  it(":vars はトグル、:vars on/off は明示指定", () => {
+    expect(parseInput(":vars")).toEqual({ kind: "toggleVars", value: undefined });
+    expect(parseInput(":vars on")).toEqual({ kind: "toggleVars", value: true });
+    expect(parseInput(":vars off")).toEqual({ kind: "toggleVars", value: false });
+  });
+
+  it(":vars に不正な引数を渡すと invalid", () => {
+    expect(parseInput(":vars maybe").kind).toBe("invalid");
+  });
 });
 
 describe("parseInkValue", () => {

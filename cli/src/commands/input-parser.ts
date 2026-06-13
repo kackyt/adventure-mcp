@@ -6,6 +6,7 @@ export type Command =
   | { kind: "choice"; index: number }
   | { kind: "getVar"; name: string }
   | { kind: "setVar"; name: string; value: InkValue }
+  | { kind: "toggleVars"; value: boolean | undefined } // ステータスの変数表示切替（未指定はトグル）
   | { kind: "quit" }
   | { kind: "empty" }
   | { kind: "invalid"; reason: string };
@@ -101,8 +102,16 @@ function parseDebugCommand(line: string): Command {
     return { kind: "setVar", name: varName, value: parseInkValue(rawValue) };
   }
 
+  if (command === "vars") {
+    const arg = rest[0]?.toLowerCase();
+    if (arg === "on") return { kind: "toggleVars", value: true };
+    if (arg === "off") return { kind: "toggleVars", value: false };
+    if (arg === undefined) return { kind: "toggleVars", value: undefined };
+    return { kind: "invalid", reason: ":vars の使い方: :vars [on|off]" };
+  }
+
   return {
     kind: "invalid",
-    reason: `未知のコマンドです: :${command}（:get / :set / :quit が利用できます）`,
+    reason: `未知のコマンドです: :${command}（:get / :set / :vars / :quit が利用できます）`,
   };
 }
