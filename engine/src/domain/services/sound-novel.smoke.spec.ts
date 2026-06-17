@@ -97,33 +97,34 @@ describe("ザッピング型 (zapping_novel)", () => {
     engine = new ScenarioEngine(load("zapping_novel.json"));
   });
 
-  it("交互に視点を切り替えると（A→B→A）フィナーレに到達する", () => {
-    advance(engine);
-    choose(engine, "探偵アレンの視点へ"); // a_found
-    expect(engine.getVariable("a_found")).toBe(true);
-    choose(engine, "記者ベルの視点へ"); // b_decoded
-    expect(engine.getVariable("b_decoded")).toBe(true);
-    choose(engine, "探偵アレンの視点へ"); // a_confront
-    expect(engine.getVariable("a_confront")).toBe(true);
-
-    const end = choose(engine, "二つの線が交わる場所へ");
-    expect(end.text).toContain("二つの線が交わって");
+  it("時刻ハンドオフで主人公を渡り歩き、誰も BADEND にせず通すとクリアする", () => {
+    const start = advance(engine);
+    expect(start.text).toContain("刑事サトル ／ 10:00"); // 最初の主人公の時刻シーン
+    const toTome = choose(engine, "穏便に間に入って諭す");
+    expect(toTome.text).toContain("ZAPPING"); // トメ編へハンドオフ
+    expect(toTome.text).toContain("トメ ／ 10:30");
+    const toMio = choose(engine, "丁寧に説明する");
+    expect(toMio.text).toContain("ミオ ／ 11:00");
+    const toSato = choose(engine, "大通りを行く");
+    expect(toSato.text).toContain("1日目クリア");
     expect(engine.canContinue()).toBe(false);
   });
 
-  it("ベルから始めると手詰まり（アレンの発見が前提）", () => {
+  it("連動: サトルの選択がトメ編を BADEND にする（別主人公の結末）", () => {
     advance(engine);
-    const b = choose(engine, "記者ベルの視点へ");
-    expect(b.text).toContain("核心には届かない");
-    expect(engine.getVariable("b_decoded")).toBe(false);
-    expect(hasChoice(engine, "二つの線が交わる場所へ")).toBe(false);
+    const bad = choose(engine, "力ずくで取り押さえる");
+    expect(bad.text).toContain("BADEND・トメ編");
+    // BADEND はやり直し可（ソフトロックでない）
+    expect(hasChoice(engine, "初めからやり直す")).toBe(true);
+    expect(hasChoice(engine, "受け入れて終える")).toBe(true);
   });
 
-  it("アレンを続けて二度進めても、ベルの解読がないと埠頭へ行けない", () => {
+  it("連動: ミオの選択がサトル編を BADEND にする", () => {
     advance(engine);
-    choose(engine, "探偵アレンの視点へ"); // a_found
-    const a2 = choose(engine, "探偵アレンの視点へ"); // b_decoded 未 → 手詰まり
-    expect(a2.text).toContain("今は打つ手がない");
-    expect(engine.getVariable("a_confront")).toBe(false);
+    choose(engine, "穏便に間に入って諭す"); // → トメ
+    choose(engine, "丁寧に説明する"); // → ミオ
+    const bad = choose(engine, "人気のない路地を抜ける");
+    expect(bad.text).toContain("BADEND・サトル編");
+    expect(hasChoice(engine, "初めからやり直す")).toBe(true);
   });
 });
