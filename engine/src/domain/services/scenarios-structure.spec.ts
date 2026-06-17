@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Story } from "inkjs/engine/Story";
+import { Story } from "inkjs";
 import { describe, expect, it } from "vitest";
 
 // =====================================================================

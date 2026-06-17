@@ -23,7 +23,9 @@ function resolveInklecate(): string {
       ? resolve(repoRoot, "bin/windows/inklecate.exe")
       : platform === "linux"
         ? resolve(repoRoot, "bin/linux/inklecate")
-        : "";
+        : platform === "darwin"
+          ? resolve(repoRoot, "bin/mac/inklecate")
+          : "";
   if (!candidate || !existsSync(candidate)) {
     console.error(
       `inklecate が見つかりません（platform=${platform}）。` +
