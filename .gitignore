@@ -22,3 +22,6 @@ target
 **/node_modules
 __pycache__
 **/**.pyc
+
+# inklecate バイナリ（setup:ink で取得・コミットしない）
+bin/

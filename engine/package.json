@@ -9,8 +9,10 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "vitest run",
-    "build:ink": "node scripts/build-ink.ts"
+    "test": "vitest run --exclude **/scenarios-structure.spec.ts",
+    "test:scenarios": "vitest run scenarios-structure",
+    "build:ink": "node scripts/build-ink.ts",
+    "setup:ink": "node scripts/install-inklecate.ts"
   },
   "dependencies": {
     "inkjs": "^2.2.0"

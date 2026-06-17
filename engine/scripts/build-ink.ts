@@ -26,7 +26,8 @@ function resolveInklecate(): string {
         : "";
   if (!candidate || !existsSync(candidate)) {
     console.error(
-      `inklecate が見つかりません（platform=${platform}）。bin/<windows|linux>/ を確認してください。`,
+      `inklecate が見つかりません（platform=${platform}）。` +
+        "`pnpm --filter engine run setup:ink` で取得してください（bin/ はコミットされません）。",
     );
     process.exit(1);
   }
