@@ -76,16 +76,16 @@ describe("サウンドノベル標準型 (sound_novel)", () => {
     choose(engine, "物語を始める");
     choose(engine, "朝を待つ");
     let title = choose(engine, "タイトルに戻る");
-    expect(title.choices.some((c) => c.text.includes("隠された真実"))).toBe(false); // まだ
+    expect(title.choices.some((c) => c.text.includes("残された矛盾"))).toBe(false); // まだ
 
     // 2周目: GOOD
     choose(engine, "もう一度、あの夜へ");
     choose(engine, "確かめに行く");
     choose(engine, "抱き起こす");
     title = choose(engine, "タイトルに戻る");
-    expect(title.choices.some((c) => c.text.includes("隠された真実"))).toBe(true); // 解禁
+    expect(title.choices.some((c) => c.text.includes("残された矛盾"))).toBe(true); // 解禁
 
-    const end = choose(engine, "隠された真実をたどる");
+    const end = choose(engine, "残された矛盾をたどる");
     expect(end.text).toContain("TRUE END");
     expect(engine.canContinue()).toBe(false);
   });
