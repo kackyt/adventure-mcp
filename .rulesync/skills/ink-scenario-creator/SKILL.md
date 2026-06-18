@@ -22,6 +22,7 @@ description: >-
    要件に合わせて Ink の構文を使用し、シナリオを実装します。
    - 基本的な分岐、選択肢、簡単なフラグ管理が必要な場合は [ink_basics.md](./references/ink_basics.md) を参照してください。
    - より複雑なロジック（Weave、Thread、List、関数など）が必要な場合は [ink_advanced.md](./references/ink_advanced.md) を参照してください。
+   - **公開ステータス変数 `public_status` を必ず宣言してください。** AI に見せてよいステータス（HP・所持金・現在地など）の変数名をカンマ区切りで列挙する予約変数です。解法フラグ（`has_*` / `is_*` / `knows_*` など）は載せません。書式・判断基準・具体例は [adventure_mcp_patterns.md](./references/adventure_mcp_patterns.md) の「公開ステータス変数 `public_status`」節を参照してください。
 
 3. **ファイルの出力**
    実装したシナリオは、`engine/assets/` ディレクトリ配下に `.ink` 形式で保存します。

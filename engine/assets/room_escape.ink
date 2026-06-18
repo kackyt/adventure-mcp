@@ -1,5 +1,8 @@
 VAR has_key = false
 
+// has_key は解法フラグ（公開するとネタバレ）なので公開ステータスは無し。
+VAR public_status = ""
+
 -> locked_room
 
 === locked_room ===
