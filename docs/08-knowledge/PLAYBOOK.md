@@ -1,11 +1,11 @@
 ---
 title: "PLAYBOOK"
-version: "1.4.0"
+version: "1.5.0"
 status: "approved"
 created: "2026-06-01"
-updated: "2026-06-13"
+updated: "2026-06-18"
 owner: "kacky"
-ace_entry_count: 10
+ace_entry_count: 13
 tags: [ace, playbook, knowledge-management]
 references:
   - docs/ACE_FRAMEWORK.md
@@ -368,3 +368,60 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 **Context**: PR #8で対話CLIを行ベースから全画面TUIへ移行した際、ゲームの進行管理をヘッドレスな `GameController` に分離することで堅牢なユニットテストを実現した。
 
 **Action**: UIを持つツールを実装する際は、ロジックを直接Viewに記述せず、ヘッドレスで動作するController層を設ける。
+
+<a id="ace-14-1"></a>
+
+### ACE-14-1: Inkシナリオのランダム踏破による動的検証
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | testing   |
+| Origin     | PR #14 / Issue #12 |
+| Date       | 2026-06-18 |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: Inkシナリオのソフトロック・エラー検出には、決定論的シードを用いた全シナリオ共通のランダム踏破テスト（動的検証）が有効である。
+
+**Context**: 個別のスモークテストでは網羅が難しい分岐ルートのデッドエンドやエラーを検出するため、各シナリオ非依存でランダムに選択肢を選び続ける検証基盤（`test:scenarios`）を導入した。
+
+**Action**: Inkシナリオの品質を担保する際は、固定パスのテストに加え、シード固定のランダム選択により未想定のソフトロックをあぶり出す動的検証テストを組み込む。
+
+<a id="ace-14-2"></a>
+
+### ACE-14-2: 固定コマンドパレットによるノンスポイラー設計 (outcome-gating)
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | architecture   |
+| Origin     | PR #14 / Issue #12 |
+| Date       | 2026-06-18 |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: 謎解きにおいて、選択肢の増減によってメタなヒントを与えないよう、固定のコマンドパレットによる行動判定（outcome-gating）を採用する。
+
+**Context**: 正解の行動が選択肢に「現れる」こと自体が答えのネタバレになってしまう問題（創発パズルの要件）を解決するため、行動の成否を内部状態でゲートする仕組みが定義された。
+
+**Action**: 謎解きを実装する際は、常に固定の動詞パレット（例：探偵コマンド、脱出コマンド）を提示し、プレイヤーの進行度（内部状態）によってその行動が有効かどうかを判定する設計とする。
+
+<a id="ace-14-3"></a>
+
+### ACE-14-3: inklecateによるInkファイルの静的解析
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | tooling   |
+| Origin     | PR #14 |
+| Date       | 2026-06-18 |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: Inkシナリオの静的解析と品質保証には、`inklecate` コンパイラによる警告・エラー（ERROR/TODO/WARNING）検出を活用しビルドプロセスに組み込む。
+
+**Context**: 実行時エラーしか検出できない inkjs ベースのテストに加え、`build:ink` プロセスを `inklecate` を用いるように刷新し、静的解析と統計レポートを行えるようにした。
+
+**Action**: Inkプロジェクトのビルド・チェックプロセスには `inklecate` コンパイラを導入し、CI等で事前に構文エラーや警告を検出できる基盤を構築する。
