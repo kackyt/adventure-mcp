@@ -1,6 +1,6 @@
 {
   "targets": ["antigravity-ide", "antigravity-cli", "claudecode"],
-  "features": ["rules", "ignore", "commands", "skills", "subagents"],
+  "features": ["rules", "ignore", "commands", "skills", "subagents", "mcp"],
   "baseDirs": ["."],
   "delete": false,
   "verbose": false,

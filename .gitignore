@@ -25,3 +25,7 @@ __pycache__
 
 # inklecate バイナリ（setup:ink で取得・コミットしない）
 bin/
+
+# rulesync が生成する MCP 設定（源泉は .rulesync/mcp.json。各自 `pnpm exec rulesync generate` で生成）
+/.mcp.json
+/.agents/mcp_config.json

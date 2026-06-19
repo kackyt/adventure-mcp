@@ -1,16 +1,16 @@
-import type { Choice } from "engine";
+import type { Choice, GameSession } from "engine";
 import { parseInput } from "../commands/input-parser.ts";
-import type { Action, PlayableEngine, ViewMessage, ViewModel } from "./view-model.ts";
+import type { Action, ViewMessage, ViewModel } from "./view-model.ts";
 
 /**
  * ゲーム進行のヘッドレスコントローラ。
  *
- * エンジンの進行・選択・デバッグ操作をすべてここに集約し、内部状態から
- * {@link ViewModel} を導出する。描画や端末 I/O は一切持たないため、View に
- * 依存しないユニットテストで状態遷移を検証できる。
+ * 進行・選択・履歴は engine の {@link GameSession}（CLI と mcp-server で共用の前進
+ * プリミティブ）に委譲し、本クラスは選択ハイライトやコマンドモードといった CLI 固有の
+ * UI 状態のみを持つ。生変数の参照・改変は {@link GameSession.debug}（デバッグ専用経路）
+ * を通す。描画や端末 I/O は持たないため、View 非依存のユニットテストで検証できる。
  */
 export class GameController {
-  private readonly history: string[] = []; // 過去シーン（表示はしないが将来の :history 用に保持）
   private currentScene = "";
   private choices: Choice[] = [];
   private mode: "choosing" | "command" | "ended" = "choosing";
@@ -20,8 +20,9 @@ export class GameController {
   private statusVisible = false;
   private exited = false;
 
-  constructor(private readonly engine: PlayableEngine) {
-    this.advance();
+  constructor(private readonly session: GameSession) {
+    // GameSession はコンストラクタで最初の状況まで前進済み。それを取り込む。
+    this.applySnapshot(this.session.getSituation());
   }
 
   /** quit が要求されたか。driver はこれを見て後始末し終了する。 */
@@ -76,7 +77,8 @@ export class GameController {
   getViewModel(): ViewModel {
     return {
       mode: this.mode,
-      status: { variables: this.engine.getVariables(), visible: this.statusVisible },
+      // ステータス表示は CLI のデバッグ機能なので生変数全体を見せる（mcp の公開ステータスとは別）
+      status: { variables: this.session.debug.getVariables(), visible: this.statusVisible },
       scene: this.currentScene,
       choices: this.choices.map((choice, i) => ({
         label: choice.text,
@@ -88,23 +90,13 @@ export class GameController {
     };
   }
 
-  /** 続行可能な間テキストを読み進め、新しいシーンと選択肢を確定する。 */
-  private advance(): void {
-    if (this.currentScene.length > 0) {
-      this.history.push(this.currentScene);
-    }
-
-    const parts: string[] = [];
-    while (this.engine.canContinue()) {
-      const text = this.engine.continue().replace(/\s+$/, "");
-      if (text.length > 0) parts.push(text);
-    }
-
-    this.currentScene = parts.join("\n");
-    this.choices = [...this.engine.currentChoices];
+  /** GameSession のスナップショットから表示状態を確定する。 */
+  private applySnapshot(snapshot: ReturnType<GameSession["getSituation"]>): void {
+    this.currentScene = snapshot.scene;
+    this.choices = snapshot.choices;
     this.selectedIndex = 0;
     this.message = null;
-    this.mode = this.choices.length === 0 ? "ended" : "choosing";
+    this.mode = snapshot.ended ? "ended" : "choosing";
   }
 
   private move(delta: number): void {
@@ -116,8 +108,7 @@ export class GameController {
 
   private confirmSelection(): void {
     if (this.mode !== "choosing" || this.choices.length === 0) return;
-    this.engine.chooseChoiceIndex(this.choices[this.selectedIndex].index);
-    this.advance();
+    this.applySnapshot(this.session.choose(this.choices[this.selectedIndex].index));
   }
 
   private selectIndex(index: number): void {
@@ -178,7 +169,7 @@ export class GameController {
 
   private handleGetVar(name: string): void {
     try {
-      const value = this.engine.getVariable(name);
+      const value = this.session.debug.getVariable(name);
       // Ink の VAR は非 null 初期値を持つため、null/undefined は未定義変数とみなす
       if (value === null || value === undefined) {
         this.message = { kind: "error", text: `変数が見つかりません: ${name}` };
@@ -192,7 +183,7 @@ export class GameController {
 
   private handleSetVar(name: string, value: number | boolean | string): void {
     try {
-      this.engine.setVariable(name, value);
+      this.session.debug.setVariable(name, value);
       this.message = { kind: "info", text: formatVariable(name, value) };
     } catch (e) {
       // 未宣言の変数への代入は InkJS が例外を投げるため、エラーとして提示し継続する

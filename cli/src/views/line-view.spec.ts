@@ -1,10 +1,15 @@
 import type { Choice } from "engine";
-import { EngineError } from "engine";
+import { EngineError, GameSession } from "engine";
 import { describe, expect, it } from "vitest";
 import { GameController } from "../controller/game-controller.ts";
 import type { PlayableEngine } from "../controller/view-model.ts";
 import type { LineIO } from "./line-view.ts";
 import { LineView } from "./line-view.ts";
+
+/** FakeEngine を GameSession に包んで GameController を生成するヘルパ。 */
+function controller(engine: PlayableEngine): GameController {
+  return new GameController(new GameSession(engine));
+}
 
 interface FakeNode {
   texts: string[];
@@ -56,6 +61,9 @@ class FakeEngine implements PlayableEngine {
   getVariables(): Record<string, unknown> {
     return { ...this.variables };
   }
+  getPublicVariables(): Record<string, unknown> {
+    return {};
+  }
 }
 
 /** 用意した入力列を順に返す IO フェイク。出力とエラーを配列に蓄積する。 */
@@ -86,7 +94,7 @@ describe("LineView", () => {
     ]);
     const io = new FakeIO(["1"]);
 
-    const code = await new LineView(io).run(new GameController(engine));
+    const code = await new LineView(io).run(controller(engine));
 
     expect(code).toBe(0);
     expect(io.out).toContain("暗い部屋にいる。");
@@ -97,7 +105,7 @@ describe("LineView", () => {
   it("終端で終了メッセージを表示し 0 を返す", async () => {
     const io = new FakeIO([]);
     const code = await new LineView(io).run(
-      new GameController(new FakeEngine([{ texts: ["終わり。"], choices: [] }])),
+      controller(new FakeEngine([{ texts: ["終わり。"], choices: [] }])),
     );
     expect(code).toBe(0);
     expect(io.out).toContain("--- 物語は終わりを迎えた ---");
@@ -110,7 +118,7 @@ describe("LineView", () => {
     ]);
     const io = new FakeIO(["hello", "1"]);
 
-    await new LineView(io).run(new GameController(engine));
+    await new LineView(io).run(controller(engine));
 
     expect(io.err.some((l) => l.includes("認識できない"))).toBe(true);
     expect(engine.chosen).toEqual([0]);
@@ -120,7 +128,7 @@ describe("LineView", () => {
     const engine = new FakeEngine([{ texts: ["S"], choices: ["go"] }], { hp: 100 });
     const io = new FakeIO([":get hp", ":set hp 30", ":get hp"]);
 
-    await new LineView(io).run(new GameController(engine));
+    await new LineView(io).run(controller(engine));
 
     expect(io.out).toContain("hp = 100");
     expect(io.out).toContain("hp = 30");
@@ -130,7 +138,7 @@ describe("LineView", () => {
     const engine = new FakeEngine([{ texts: ["S"], choices: ["go"] }]);
     const io = new FakeIO([":quit"]);
 
-    const code = await new LineView(io).run(new GameController(engine));
+    const code = await new LineView(io).run(controller(engine));
 
     expect(code).toBe(0);
     expect(engine.chosen).toEqual([]);
@@ -138,7 +146,7 @@ describe("LineView", () => {
 
   it("EOF で 0 を返す", async () => {
     const code = await new LineView(new FakeIO([null])).run(
-      new GameController(new FakeEngine([{ texts: ["S"], choices: ["go"] }])),
+      controller(new FakeEngine([{ texts: ["S"], choices: ["go"] }])),
     );
     expect(code).toBe(0);
   });
