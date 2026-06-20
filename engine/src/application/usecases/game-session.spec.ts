@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Choice } from "../domain/services/scenario-engine.ts";
-import { SessionError } from "../shared/errors/session-error.ts";
+import type { Choice } from "../../domain/services/scenario-engine.ts";
+import { SessionError } from "../../shared/errors/session-error.ts";
 import { GameSession, normalizeChoiceLabel, type PlayableEngine } from "./game-session.ts";
 
 /** 本文と選択肢のノード列で進行を表すフェイクエンジン。 */

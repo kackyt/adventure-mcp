@@ -1,13 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { ScenarioEngine } from "../domain/services/scenario-engine.ts";
-import type { ScenarioStoragePort } from "../ports/scenario-storage-port.ts";
-import { SessionError } from "../shared/errors/session-error.ts";
-import { GameSession, type Snapshot, type Turn } from "./game-session.ts";
-
-/** start_game の返却（スナップショットに sessionId を加えたもの）。 */
-export interface StartedGame extends Snapshot {
-  sessionId: string;
-}
+import { ScenarioEngine } from "../../domain/services/scenario-engine.ts";
+import type { ScenarioStoragePort } from "../../ports/scenario-storage-port.ts";
+import { SessionError } from "../../shared/errors/session-error.ts";
+import type { Snapshot, StartedGame, Turn } from "../dtos/game-dtos.ts";
+import { GameSession } from "./game-session.ts";
 
 /**
  * 複数の {@link GameSession} を sessionId で束ねる Primary Port。

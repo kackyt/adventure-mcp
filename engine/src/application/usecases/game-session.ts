@@ -1,5 +1,6 @@
-import type { Choice } from "../domain/services/scenario-engine.ts";
-import { SessionError } from "../shared/errors/session-error.ts";
+import type { Choice } from "../../domain/services/scenario-engine.ts";
+import { SessionError } from "../../shared/errors/session-error.ts";
+import type { Snapshot, Turn } from "../dtos/game-dtos.ts";
 
 /**
  * {@link GameSession} が依存するシナリオエンジンの操作面。
@@ -15,25 +16,6 @@ export interface PlayableEngine {
   setVariable(name: string, value: unknown): void;
   getVariables(): Record<string, unknown>;
   getPublicVariables(): Record<string, unknown>;
-}
-
-/** AI に渡してよい現在状況のスナップショット（生の Ink 変数は含めない）。 */
-export interface Snapshot {
-  /** 表示済み本文（continue 群を改行連結）。 */
-  scene: string;
-  /** 提示順 0..n-1 に正規化した選択肢。 */
-  choices: Choice[];
-  /** `public_status` で公開宣言された変数のみ。 */
-  status: Record<string, unknown>;
-  /** 選択肢が無く、これ以上進めない終端か。 */
-  ended: boolean;
-}
-
-/** 行動履歴の 1 ターン。最新（未選択）ターンの `choice` は null。 */
-export interface Turn {
-  turn: number;
-  scene: string;
-  choice: string | null;
 }
 
 /** CLI デバッグ専用の生変数アクセサ（mcp-server からは到達させない）。 */

@@ -1,7 +1,7 @@
 import { Compiler } from "inkjs/compiler/Compiler";
 import { describe, expect, it } from "vitest";
-import type { ScenarioStoragePort } from "../ports/scenario-storage-port.ts";
-import { SessionError } from "../shared/errors/session-error.ts";
+import type { ScenarioStoragePort } from "../../ports/scenario-storage-port.ts";
+import { SessionError } from "../../shared/errors/session-error.ts";
 import { SessionManager } from "./session-manager.ts";
 
 function compile(source: string): string {
