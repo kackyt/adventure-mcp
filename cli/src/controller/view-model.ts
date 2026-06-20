@@ -1,19 +1,5 @@
-import type { Choice } from "engine";
-
-/**
- * コントローラが利用するシナリオエンジンの操作。
- * `engine` の `ScenarioEngine` が構造的に満たす。具象クラスから切り離し、
- * テスト時にフェイクを差し込めるようにするための抽象。
- */
-export interface PlayableEngine {
-  canContinue(): boolean;
-  continue(): string;
-  readonly currentChoices: Choice[];
-  chooseChoiceIndex(index: number): void;
-  getVariable(name: string): unknown;
-  setVariable(name: string, value: unknown): void;
-  getVariables(): Record<string, unknown>;
-}
+// GameSession が依存するエンジン操作面。テスト用フェイクはこれを実装する。
+export type { PlayableEngine } from "engine";
 
 /** 現在の操作モード。 */
 export type ViewMode = "choosing" | "command" | "ended";

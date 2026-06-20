@@ -190,7 +190,8 @@ src/
 │   └── services/    # ドメインサービス
 ├── application/      # アプリケーション層
 │   ├── usecases/    # ユースケース
-│   └── dtos/        # データ転送オブジェクト
+│   ├── dtos/        # データ転送オブジェクト
+│   └── ports/       # ポート（外部依存の抽象 IF。実装は infrastructure）
 ├── infrastructure/   # インフラ層
 │   ├── repositories/# リポジトリ実装
 │   ├── external/    # 外部サービス
@@ -204,6 +205,12 @@ src/
     ├── errors/      # エラー定義
     └── utils/       # ユーティリティ
 ```
+
+> **ポート（`application/ports/`）の依存方向**: ポートは「外部能力が欲しい」という
+> アプリケーション側の宣言なので `application` が所有し、その実装（アダプタ）は
+> `infrastructure` に置く。依存は `infrastructure → application/ports`（依存性逆転、
+> 外側→内側）が正方向で、`application → infrastructure` は禁止。具象アダプタの結線は
+> composition root（各実行可能パッケージの起動部）が担う。
 
 ### ファイル命名規則
 

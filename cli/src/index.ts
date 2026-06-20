@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
-import { EngineError, ScenarioEngine } from "engine";
+import { EngineError, GameSession, readStoryJsonFromPath, ScenarioEngine } from "engine";
 import { GameController } from "./controller/game-controller.ts";
 import { BlessedView } from "./views/blessed-view.ts";
 import { formatError } from "./views/formatter.ts";
@@ -37,25 +36,24 @@ async function main(): Promise<number> {
 
   let storyJson: string;
   try {
-    const raw = readFileSync(scenarioPath, "utf-8");
-    // inkjs-compiler の出力は UTF-8 BOM 付きのため、JSON.parse が失敗しないよう除去する
-    storyJson = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+    // BOM 除去を含むシナリオ JSON の読み込みは engine 側ローダに集約されている
+    storyJson = readStoryJsonFromPath(scenarioPath);
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     process.stderr.write(`${formatError(`シナリオファイルを読み込めません: ${detail}`)}\n`);
     return 1;
   }
 
-  let engine: ScenarioEngine;
+  let session: GameSession;
   try {
-    engine = new ScenarioEngine(storyJson);
+    session = new GameSession(new ScenarioEngine(storyJson));
   } catch (e) {
     const detail = e instanceof EngineError ? e.message : String(e);
     process.stderr.write(`${formatError(`シナリオの読み込みに失敗しました: ${detail}`)}\n`);
     return 1;
   }
 
-  const controller = new GameController(engine);
+  const controller = new GameController(session);
   const useTui = !plain && Boolean(process.stdout.isTTY) && Boolean(process.stdin.isTTY);
   const view: IGameView = useTui ? new BlessedView() : createLineView();
 

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "adventure": {
+      "command": "node",
+      "args": [
+        "--experimental-transform-types",
+        "--disable-warning=ExperimentalWarning",
+        "${workspaceFolder}/mcp-server/src/index.ts"
+      ]
+    }
+  }
+}

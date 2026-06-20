@@ -110,4 +110,43 @@ export class ScenarioEngine {
       throw new EngineError(`Failed to set variable: ${name}`, e);
     }
   }
+
+  /**
+   * 予約変数 `public_status`（カンマ区切りの公開変数名）に列挙された変数だけを
+   * `{ name: value }` で返します。アンチチートのため、生の Ink 変数全体は決して
+   * 露出させず「作者が公開を宣言した変数」のみを取り出します。
+   *
+   * - `public_status` 未宣言（または空）の場合は空オブジェクトを返す。
+   * - `public_status` 自体は結果に含めない。
+   * - 列挙されていても実在しない変数名は無視する。
+   *
+   * @returns 公開変数名をキー、現在値を値とするオブジェクト
+   */
+  public getPublicVariables(): Record<string, unknown> {
+    try {
+      const state = this.story.variablesState;
+      const raw = state.public_status;
+      if (typeof raw !== "string" || raw.trim().length === 0) {
+        return {};
+      }
+      const names = new Set(
+        raw
+          .split(",")
+          .map((name) => name.trim())
+          .filter((name) => name.length > 0 && name !== "public_status"),
+      );
+      const result: Record<string, unknown> = {};
+      for (const name of names) {
+        const value = state[name];
+        // Ink の VAR は非 null 初期値を持つため、実在しない変数は null/undefined になる。
+        // これらは「未定義」とみなして公開対象から除外する。
+        if (value !== undefined && value !== null) {
+          result[name] = value;
+        }
+      }
+      return result;
+    } catch (e) {
+      throw new EngineError("Failed to get public variables", e);
+    }
+  }
 }
