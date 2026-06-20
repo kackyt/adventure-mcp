@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { ScenarioStoragePort } from "../ports/scenario-storage-port.ts";
+import type { ScenarioStoragePort } from "../application/ports/scenario-storage-port.ts";
 import { EngineError } from "../shared/errors/engine-error.ts";
 
 /** 許可するシナリオ id の文字種（snake_case）。 */

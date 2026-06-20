@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { ScenarioEngine } from "../../domain/services/scenario-engine.ts";
-import type { ScenarioStoragePort } from "../../ports/scenario-storage-port.ts";
 import { SessionError } from "../../shared/errors/session-error.ts";
 import type { Snapshot, StartedGame, Turn } from "../dtos/game-dtos.ts";
+import type { ScenarioStoragePort } from "../ports/scenario-storage-port.ts";
 import { GameSession } from "./game-session.ts";
 
 /**
