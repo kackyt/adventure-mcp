@@ -1,15 +1,15 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { ScenarioStoragePort } from "../application/ports/scenario-storage-port.ts";
-import { EngineError } from "../shared/errors/engine-error.ts";
+import type { ScenarioStoragePort } from "../../application/ports/scenario-storage-port.ts";
+import { EngineError } from "../../shared/errors/engine-error.ts";
 
 /** 許可するシナリオ id の文字種（snake_case）。 */
 const ID_PATTERN = /^[a-z0-9_]+$/;
 
 /** engine パッケージ基準の既定 assets ディレクトリ（CWD に依存しない）。 */
 function defaultAssetsDir(): string {
-  // このファイルは engine/src/infrastructure/ にあるため ../../assets = engine/assets
-  return resolve(import.meta.dirname, "../../assets");
+  // このファイルは engine/src/infrastructure/persistence/ にあるため ../../../assets = engine/assets
+  return resolve(import.meta.dirname, "../../../assets");
 }
 
 /**

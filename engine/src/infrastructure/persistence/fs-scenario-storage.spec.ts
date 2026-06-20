@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EngineError } from "../shared/errors/engine-error.ts";
+import { EngineError } from "../../shared/errors/engine-error.ts";
 import { FsScenarioStorage } from "./fs-scenario-storage.ts";
 
 // 既定 assets ディレクトリ（engine/assets）の実ファイルに対する検証。
