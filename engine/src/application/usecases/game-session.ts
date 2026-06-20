@@ -84,7 +84,7 @@ export class GameSession {
         this.snapshotChoices(),
       );
     }
-    if (expectedText !== undefined) {
+    if (expectedText !== undefined && expectedText.trim() !== "") {
       const actual = normalizeChoiceLabel(this.choices[index].text);
       const expected = normalizeChoiceLabel(expectedText);
       const matches =
