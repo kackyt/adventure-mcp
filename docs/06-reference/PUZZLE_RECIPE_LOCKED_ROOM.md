@@ -12,8 +12,7 @@ updated: "2026-06-15"
 密室トリック（howdunit）を、adventure-mcp の純メニュー＋状態秘匿で作るための再現
 レシピ。難易度モデルやジャンル全体は [PUZZLE_DESIGN.md](./PUZZLE_DESIGN.md) を参照。
 
-- 完成サンプル: `engine/assets/sealed_room.ink`（氷トリック）
-- スモークプレイ: `engine/src/domain/services/sealed-room.smoke.spec.ts`
+- 完成サンプル（参照資料）: `docs/06-reference/scenarios/sealed_room.ink`（氷トリック）
 
 ## 0. 密室トリックの論理エンジン
 
@@ -191,4 +190,5 @@ AI 相性◎を厚めに: T7・T5・T6・T3 を高め、T2・T4 を中、T1・T8
 - 裏づけ未取得では正解機構も確定しない（当てずっぽう防止）
 - （論理の厳密さを期すなら）全手がかりに整合する機構が一つだけであることを別途確認
 
-実装例の検証は `engine/src/domain/services/sealed-room.smoke.spec.ts` を参照。
+実装例（参照資料）は `docs/06-reference/scenarios/sealed_room.ink` を参照。新しいライブ
+シナリオを `engine/assets/` に作るときは、唯一解検証とスモークプレイを必ず添える。
