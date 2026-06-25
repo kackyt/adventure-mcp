@@ -1,6 +1,6 @@
 import * as readline from "node:readline/promises";
 import type { GameController } from "../controller/game-controller.ts";
-import { formatChoices, formatError, formatPassage } from "./formatter.ts";
+import { formatChoices, formatError, formatLocation, formatPassage } from "./formatter.ts";
 import type { IGameView } from "./game-view.interface.ts";
 
 /**
@@ -33,6 +33,9 @@ export class LineView implements IGameView {
       const vm = controller.getViewModel();
 
       if (vm.scene !== this.lastScene) {
+        if (vm.location !== null) {
+          this.io.write(formatLocation(vm.location));
+        }
         this.io.write(formatPassage(vm.scene));
         this.lastScene = vm.scene;
       }

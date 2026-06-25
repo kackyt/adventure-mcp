@@ -23,6 +23,8 @@ export interface ViewChoice {
 export interface ViewModel {
   mode: ViewMode;
   status: { variables: Record<string, unknown>; visible: boolean };
+  /** 公開ステータス由来の現在地。`place` が公開変数のときその値、無ければ null。常時表示用。 */
+  location: string | null;
   scene: string;
   choices: ViewChoice[];
   command: { active: boolean; buffer: string };

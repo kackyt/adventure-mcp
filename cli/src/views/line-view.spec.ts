@@ -26,6 +26,7 @@ class FakeEngine implements PlayableEngine {
   constructor(
     private readonly nodes: FakeNode[],
     variables: Record<string, unknown> = {},
+    private readonly publicVariables: Record<string, unknown> = {},
   ) {
     this.variables = { ...variables };
     this.loadNode(0);
@@ -62,7 +63,7 @@ class FakeEngine implements PlayableEngine {
     return { ...this.variables };
   }
   getPublicVariables(): Record<string, unknown> {
-    return {};
+    return { ...this.publicVariables };
   }
   getState(): string {
     return JSON.stringify({ cursor: this.cursor, chosen: this.chosen });
@@ -109,6 +110,36 @@ describe("LineView", () => {
     expect(io.out).toContain("暗い部屋にいる。");
     expect(io.out).toContain("  1) 扉を調べる\n  2) 待つ");
     expect(engine.chosen).toEqual([0]);
+  });
+
+  it("place が公開変数なら現在地ヘッダを本文の前に表示する", async () => {
+    const engine = new FakeEngine(
+      [
+        { texts: ["広間にいる。"], choices: ["奥へ"] },
+        { texts: ["最奥。"], choices: [] },
+      ],
+      {},
+      { place: "古城の広間" },
+    );
+    const io = new FakeIO(["1"]);
+
+    await new LineView(io).run(controller(engine));
+
+    expect(io.out).toContain("【現在地: 古城の広間】");
+    // ヘッダは本文の直前に出る
+    expect(io.out.indexOf("【現在地: 古城の広間】")).toBeLessThan(io.out.indexOf("広間にいる。"));
+  });
+
+  it("place が公開されていなければ現在地ヘッダは出ない", async () => {
+    const engine = new FakeEngine([
+      { texts: ["部屋。"], choices: ["go"] },
+      { texts: ["先。"], choices: [] },
+    ]);
+    const io = new FakeIO(["1"]);
+
+    await new LineView(io).run(controller(engine));
+
+    expect(io.out.some((l) => l.includes("現在地"))).toBe(false);
   });
 
   it("終端で終了メッセージを表示し 0 を返す", async () => {

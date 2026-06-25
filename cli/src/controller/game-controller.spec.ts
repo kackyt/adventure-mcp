@@ -28,6 +28,7 @@ class FakeEngine implements PlayableEngine {
   constructor(
     private readonly nodes: FakeNode[],
     variables: Record<string, unknown> = {},
+    private readonly publicVariables: Record<string, unknown> = {},
   ) {
     this.variables = { ...variables };
     this.loadNode(0);
@@ -73,7 +74,12 @@ class FakeEngine implements PlayableEngine {
   }
 
   getPublicVariables(): Record<string, unknown> {
-    return {};
+    return { ...this.publicVariables };
+  }
+
+  /** テスト用：公開ステータスの place を更新する。 */
+  setPublicPlace(place: string): void {
+    this.publicVariables.place = place;
   }
 
   getState(): string {
@@ -101,6 +107,33 @@ describe("GameController", () => {
       { label: "扉を調べる", selected: true },
       { label: "待つ", selected: false },
     ]);
+  });
+
+  it("place が公開変数なら現在地を ViewModel.location に常時載せる", () => {
+    const engine = new FakeEngine([{ texts: ["S"], choices: ["go"] }], {}, { place: "入口の広間" });
+    expect(controller(engine).getViewModel().location).toBe("入口の広間");
+  });
+
+  it("place が公開されていなければ location は null", () => {
+    const engine = new FakeEngine([{ texts: ["S"], choices: ["go"] }], { place: "隠し場所" });
+    // place は生変数だが public_status で公開していない → location は出さない
+    expect(controller(engine).getViewModel().location).toBeNull();
+  });
+
+  it("選択で前進すると location が公開ステータスに追従する", () => {
+    const engine = new FakeEngine(
+      [
+        { texts: ["広間"], choices: ["奥へ"] },
+        { texts: ["奥の間"], choices: [] },
+      ],
+      {},
+      { place: "広間" },
+    );
+    const c = controller(engine);
+    expect(c.getViewModel().location).toBe("広間");
+    engine.setPublicPlace("奥の間"); // 次スナップショットで反映される想定
+    c.apply({ type: "selectIndex", index: 0 });
+    expect(c.getViewModel().location).toBe("奥の間");
   });
 
   it("全変数のスナップショットをステータスに載せる", () => {

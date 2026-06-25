@@ -6,6 +6,7 @@ function vm(overrides: Partial<ViewModel> = {}): ViewModel {
   return {
     mode: "choosing",
     status: { variables: {}, visible: true },
+    location: null,
     scene: "",
     choices: [],
     command: { active: false, buffer: "" },

@@ -17,3 +17,8 @@ export function formatChoices(labels: string[]): string {
 export function formatError(message: string): string {
   return `エラー: ${message}`;
 }
+
+/** 現在地（公開ステータスの place）のヘッダ行を整形する。 */
+export function formatLocation(location: string): string {
+  return `【現在地: ${location}】`;
+}

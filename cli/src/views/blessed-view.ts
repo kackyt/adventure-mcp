@@ -144,6 +144,8 @@ export class BlessedView implements IGameView {
       this.sceneBox.height = "70%";
     }
 
+    // 現在地（公開ステータスの place）はシーン枠のラベルに常時表示する。
+    this.sceneBox.setLabel(vm.location !== null ? ` 現在地: ${esc(vm.location)} ` : " シーン ");
     this.sceneBox.setContent(esc(vm.scene));
     this.sceneBox.setScrollPerc(100);
 
