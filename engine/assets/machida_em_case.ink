@@ -314,26 +314,26 @@ VAR public_status = "place"
 === v_examine ===
 何を調べる？
 // --- 個室(loc1) ---
-+ {loc == 1 && not m_lastday} [机上の手帳と当日の予定表を読む] -> ex_lastday
-+ {loc == 1 && not m_wound} [遺体の傷を検める] -> ex_wound
-+ {loc == 1 && not m_floor} [床] -> ex_floor
-+ {loc == 1 && not it_draft} [机の引き出し] -> ex_draft
-+ {loc == 1 && not r_oldjob} [壁の表彰盾] -> ex_plaque
-+ {loc == 1 && not r_tenure} [ノートPCと在籍記録] -> ex_tenure
-+ {loc == 1 && r_oldjob && r_tenure && not m_gap} [二つの経歴を突き合わせる] -> ex_gap
++ {loc == 1} [机上の手帳と当日の予定表を読む] -> ex_lastday
++ {loc == 1} [遺体の傷を検める] -> ex_wound
++ {loc == 1} [床] -> ex_floor
++ {loc == 1} [机の引き出し] -> ex_draft
++ {loc == 1} [壁の表彰盾] -> ex_plaque
++ {loc == 1} [ノートPCと在籍記録] -> ex_tenure
++ {loc == 1 && r_oldjob && r_tenure} [二つの経歴を突き合わせる] -> ex_gap
 // --- 廊下(loc4・phase2) ---
-+ {loc == 4 && phase >= 2 && not m_drag} [床の擦過の筋] -> ex_drag
++ {loc == 4 && phase >= 2} [床の擦過の筋] -> ex_drag
 // --- サーバ室(loc3・phase2) ---
-+ {loc == 3 && phase >= 2 && not m_scene} [床の染みと機材の乱れ] -> ex_scene
-+ {loc == 3 && phase >= 2 && not it_bar} [ラック脇の非常用工具] -> ex_bar
-+ {loc == 3 && phase >= 2 && not it_token} [ラックの裏をのぞく] -> ex_token
++ {loc == 3 && phase >= 2} [床の染みと機材の乱れ] -> ex_scene
++ {loc == 3 && phase >= 2} [ラック脇の非常用工具] -> ex_bar
++ {loc == 3 && phase >= 2} [ラックの裏をのぞく] -> ex_token
 // --- 給湯室(loc6) ---
-+ {loc == 6 && not m_cleanup} [流しと洗い場] -> ex_cleanup
++ {loc == 6} [流しと洗い場] -> ex_cleanup
 // --- 警備室(loc5) ---
-+ {loc == 5 && not m_timeline} [入退館ログと警備カメラ] -> ex_timeline
++ {loc == 5} [入退館ログと警備カメラ] -> ex_timeline
 + {loc == 5} [ページャ（オンコール）記録] -> ex_pager
 // --- 開発フロア(loc2) ---
-+ {loc == 2 && it_draft && r_project && not m_echo} [盗用告発の草稿を読み返す] -> ex_echo
++ {loc == 2 && it_draft && r_project} [盗用告発の草稿を読み返す] -> ex_echo
 + [やめる] -> hub
 
 // ---- 個室 ----
@@ -578,7 +578,7 @@ VAR public_status = "place"
 + [しらべる] -> c2_examine
 + {loc == 2} [きく] -> c2_ask
 + {loc == 2} [つきつける] -> c2_present
-+ {loc == 3 && m2_tamper && not m2_rule} [ためす（マージガードにダミーPRを投げる）] -> mg_probe
++ {loc == 3 && m2_tamper} [ためす（マージガードにダミーPRを投げる）] -> mg_probe
 + [ばしょいどう] -> c2_move
 + [てちょう] -> v_techou
 
@@ -596,14 +596,14 @@ VAR public_status = "place"
 // ---------------- しらべる ----------------
 === c2_examine ===
 何を調べる？
-+ {loc == 3 && not m2_theft} [盗用のPRと差分] -> e2_theft
-+ {loc == 3 && not m2_tamper} [gitの履歴とreflog] -> e2_tamper
-+ {loc == 3 && not r2_access} [リポジトリ権限の一覧] -> e2_access
-+ {loc == 3 && it2_probe && not m2_rule} [マージガードの隠れルールを見極める（審判）] -> mg_judge
-+ {loc == 4 && not m2_report} [小田中宛のメール綴り] -> e2_report
-+ {loc == 4 && not r2_kurata_alibi} [取締役会の録画アーカイブ] -> e2_kurata_alibi
-+ {loc == 5 && m2_tamper_id && not m2_keyperson} [「オリオン計画」関係者の経歴を辿る] -> e2_keyperson
-+ {loc == 5 && not d2_seed} [資料棚の奥の私物段ボール] -> e2_seed
++ {loc == 3} [盗用のPRと差分] -> e2_theft
++ {loc == 3} [gitの履歴とreflog] -> e2_tamper
++ {loc == 3} [リポジトリ権限の一覧] -> e2_access
++ {loc == 3 && it2_probe} [マージガードの隠れルールを見極める（審判）] -> mg_judge
++ {loc == 4} [小田中宛のメール綴り] -> e2_report
++ {loc == 4} [取締役会の録画アーカイブ] -> e2_kurata_alibi
++ {loc == 5 && m2_tamper_id} [「オリオン計画」関係者の経歴を辿る] -> e2_keyperson
++ {loc == 5} [資料棚の奥の私物段ボール] -> e2_seed
 + [やめる] -> ch2_hub
 
 === e2_theft ===
@@ -897,15 +897,15 @@ merge-guard に、ダミーPRを投げてみる。どんなPRにする？
 // ---------------- しらべる ----------------
 === c3_examine ===
 何を調べる？
-+ {loc == 2 && not m3_orion} [当時の監査記録] -> e3_orion
-+ {loc == 2 && not r3_visit} [当時の来訪記録] -> e3_visit
-+ {loc == 2 && not d3_seed} [{tomo()}のロッカーの奥] -> e3_seed
-+ {loc == 2 && m3_testimony && r3_visit && m3_kpt && not m3_contradiction} [証言と来訪記録を突き合わせる] -> e3_contra
-+ {loc == 4 && not m3_kpt} [{tomo()}の遺品（KPTノート）] -> e3_kpt
++ {loc == 2} [当時の監査記録] -> e3_orion
++ {loc == 2} [当時の来訪記録] -> e3_visit
++ {loc == 2} [{tomo()}のロッカーの奥] -> e3_seed
++ {loc == 2 && m3_testimony && r3_visit && m3_kpt} [証言と来訪記録を突き合わせる] -> e3_contra
++ {loc == 4} [{tomo()}の遺品（KPTノート）] -> e3_kpt
 + {loc == 4} [「遺書」とされたもの] -> e3_note
-+ {loc == 3 && m3_kpt && m3_metal && not m3_decode} [KPTの隠し書きを符牒で読む] -> e3_decode
-+ {loc == 5 && not m3_orion} [当時の研究資料] -> e3_research
-+ {loc == 6 && not d3_niigata} [信濃川の土手を歩く] -> e3_niigata
++ {loc == 3 && m3_kpt && m3_metal} [KPTの隠し書きを符牒で読む] -> e3_decode
++ {loc == 5} [当時の研究資料] -> e3_research
++ {loc == 6} [信濃川の土手を歩く] -> e3_niigata
 + [やめる] -> ch3_hub
 
 === e3_orion ===
@@ -1139,9 +1139,9 @@ merge-guard に、ダミーPRを投げてみる。どんなPRにする？
 
 === c4_examine ===
 何を調べる？
-+ {loc == 1 && not m_floor} [床] -> e4_floor
-+ {loc == 1 && not it_draft} [机の引き出し] -> e4_draft
-+ {loc == 5 && r4_plan && not r4_alert} [ストレージ警報] -> e4_alert
++ {loc == 1} [床] -> e4_floor
++ {loc == 1} [机の引き出し] -> e4_draft
++ {loc == 5 && r4_plan} [ストレージ警報] -> e4_alert
 // --- 廊下(loc4・phase2) ---
 + {loc == 4 } [床] -> e4_drag
 // --- サーバ室(loc3・phase2) ---
