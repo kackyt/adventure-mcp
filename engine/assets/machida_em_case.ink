@@ -1303,7 +1303,7 @@ ORACLEの運用ログに、駒が上げた報告が残っていた。あの夜�
 + [倉持百合]
     ~ accuse4 = 5
     -> c4_pick
-+ {loc == 7 && not ai_booted } [小田中のラップトップ] -> c4_boot_present
++ {loc == 7 && not ai_booted } [小田中のラップトップ] -> c4_boot_enter
 + [やめる] -> ch4_hub
 
 === c4_pick ===
@@ -1332,6 +1332,13 @@ ORACLEの運用ログに、駒が上げた報告が残っていた。あの夜�
 -> ch4_hub
 
 // ---- AIいくおの起動：つきつける→ラップトップ→二つを提示（拾った物が囮／西野の私物は罠） ----
+//   前者方式：1枚入れて hub に戻り、再度ラップトップを選ぶと2枚目（k1 で振り分け）
+=== c4_boot_enter ===
+{ k1 == 0:
+    -> c4_boot_present
+- else:
+    -> c4_boot_present2
+}
 === c4_boot_present ===
 眠ったラップトップになにか入れてみるか
 + {it_token} [英語表記の半券]
