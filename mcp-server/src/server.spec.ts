@@ -2,8 +2,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { FsSaveStorage, FsScenarioStorage, SaveCodec, SessionManager } from "engine";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createMcpServer } from "./server.ts";
+import * as fs from "node:fs";
 
 /** 実 assets を読む fs アダプタ＋in-memory transport で end-to-end の配線を検証する。 */
 async function connectClient(): Promise<Client> {
@@ -36,6 +37,10 @@ describe("MCP server (in-memory transport)", () => {
 
   beforeEach(async () => {
     client = await connectClient();
+  });
+
+  afterAll(() => {
+    fs.rmSync("./save-data-test", { recursive: true, force: true });
   });
 
   it("10 ツールが登録・公開される", async () => {
