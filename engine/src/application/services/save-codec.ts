@@ -31,7 +31,7 @@ export class SaveCodec {
    * @throws {SessionError} 'save_tampered' - フォーマット不正、または署名不一致時
    */
   decode(text: string): SaveEnvelope {
-    const lines = text.split("\n");
+    const lines = text.trim().split(/\r?\n/);
     if (lines.length !== 3) {
       throw new SessionError("save_tampered", "セーブファイルの形式が不正です。");
     }

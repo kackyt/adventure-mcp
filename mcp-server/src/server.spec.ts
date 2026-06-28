@@ -1,10 +1,10 @@
+import * as fs from "node:fs";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { FsSaveStorage, FsScenarioStorage, SaveCodec, SessionManager } from "engine";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createMcpServer } from "./server.ts";
-import * as fs from "node:fs";
 
 /** 実 assets を読む fs アダプタ＋in-memory transport で end-to-end の配線を検証する。 */
 async function connectClient(): Promise<Client> {

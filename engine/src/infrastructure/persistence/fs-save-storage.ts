@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import type { SaveStoragePort } from "../../application/ports/save-storage-port.ts";
+import { EngineError } from "../../shared/errors/engine-error.ts";
 import { SessionError } from "../../shared/errors/session-error.ts";
 
 export class FsSaveStorage implements SaveStoragePort {
@@ -37,7 +38,7 @@ export class FsSaveStorage implements SaveStoragePort {
     try {
       fs.writeFileSync(filePath, text, "utf-8");
     } catch (e) {
-      throw new Error(`セーブデータの書き込みに失敗しました: ${(e as Error).message}`);
+      throw new EngineError(`セーブデータの書き込みに失敗しました: ${(e as Error).message}`, e);
     }
   }
 
@@ -49,7 +50,7 @@ export class FsSaveStorage implements SaveStoragePort {
     try {
       return fs.readFileSync(filePath, "utf-8");
     } catch (e) {
-      throw new Error(`セーブデータの読み込みに失敗しました: ${(e as Error).message}`);
+      throw new EngineError(`セーブデータの読み込みに失敗しました: ${(e as Error).message}`, e);
     }
   }
 
@@ -72,7 +73,7 @@ export class FsSaveStorage implements SaveStoragePort {
     try {
       fs.unlinkSync(filePath);
     } catch (e) {
-      throw new Error(`セーブデータの削除に失敗しました: ${(e as Error).message}`);
+      throw new EngineError(`セーブデータの削除に失敗しました: ${(e as Error).message}`, e);
     }
   }
 }
