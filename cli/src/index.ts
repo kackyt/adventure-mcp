@@ -1,5 +1,14 @@
 #!/usr/bin/env node
-import { EngineError, GameSession, readStoryJsonFromPath, ScenarioEngine } from "engine";
+import * as path from "node:path";
+import type { SaveEnvelope } from "engine";
+import {
+  EngineError,
+  FsSaveStorage,
+  GameSession,
+  readStoryJsonFromPath,
+  SaveCodec,
+  ScenarioEngine,
+} from "engine";
 import { GameController } from "./controller/game-controller.ts";
 import { BlessedView } from "./views/blessed-view.ts";
 import { formatError } from "./views/formatter.ts";
@@ -54,6 +63,44 @@ async function main(): Promise<number> {
   }
 
   const controller = new GameController(session);
+
+  // --- セーブ/ロード機能のセットアップ ---
+  try {
+    const saveDir = path.join(process.cwd(), "save-data");
+    const saveStorage = new FsSaveStorage(saveDir);
+    // 未設定時はデフォルトキーを利用
+    const secret = process.env.ADVENTURE_SAVE_SECRET || "adventure-mcp-default-secret-key-2026";
+    const saveCodec = new SaveCodec(secret);
+    const scenarioId = path.basename(scenarioPath, ".json");
+
+    controller.onSave = (saveId: string) => {
+      const envelope: SaveEnvelope = {
+        saveId,
+        scenarioId,
+        savedAt: new Date().toISOString(),
+        schemaVersion: 1,
+        session: controller.getSession().serialize(),
+      };
+      saveStorage.save(saveId, saveCodec.encode(envelope));
+    };
+
+    controller.onLoad = (saveId: string) => {
+      const text = saveStorage.load(saveId);
+      const envelope = saveCodec.decode(text);
+      if (envelope.scenarioId !== scenarioId) {
+        throw new Error(`セーブデータが別のシナリオ（${envelope.scenarioId}）のものです。`);
+      }
+      const engine = new ScenarioEngine(storyJson);
+      const newSession = GameSession.restore(engine, envelope.session);
+      controller.replaceSession(newSession);
+    };
+  } catch (e) {
+    process.stderr.write(
+      `${formatError(`セーブ機能の初期化に失敗しました: ${e instanceof Error ? e.message : String(e)}`)}\n`,
+    );
+  }
+  // ------------------------------------
+
   const useTui = !plain && Boolean(process.stdout.isTTY) && Boolean(process.stdin.isTTY);
   const view: IGameView = useTui ? new BlessedView() : createLineView();
 

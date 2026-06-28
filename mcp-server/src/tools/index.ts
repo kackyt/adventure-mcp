@@ -123,4 +123,47 @@ export function registerTools(server: McpServer, manager: SessionManager): void 
     },
     ({ sessionId }) => guard(() => manager.endGame(sessionId)),
   );
+
+  server.registerTool(
+    "save_game",
+    {
+      description: "現在の進行状態を指定したセーブIDとして保存する。",
+      inputSchema: {
+        sessionId: z.string(),
+        saveId: z.string(),
+      },
+      outputSchema: { ok: z.literal(true) },
+    },
+    ({ sessionId, saveId }) => guard(() => manager.saveGame(sessionId, saveId)),
+  );
+
+  server.registerTool(
+    "load_game",
+    {
+      description: "指定したセーブIDのデータを読み込み、新しい sessionId で再開する。",
+      inputSchema: { saveId: z.string() },
+      outputSchema: { sessionId: z.string(), ...snapshotShape },
+    },
+    ({ saveId }) => guard(() => manager.loadGame(saveId)),
+  );
+
+  server.registerTool(
+    "list_saves",
+    {
+      description: "保存されているセーブデータのID一覧を取得する。",
+      inputSchema: {},
+      outputSchema: { saves: z.array(z.string()) },
+    },
+    () => guard(() => ({ saves: manager.listSaves() })),
+  );
+
+  server.registerTool(
+    "delete_save",
+    {
+      description: "指定したセーブIDのデータを削除する。",
+      inputSchema: { saveId: z.string() },
+      outputSchema: { ok: z.literal(true) },
+    },
+    ({ saveId }) => guard(() => manager.deleteSave(saveId)),
+  );
 }

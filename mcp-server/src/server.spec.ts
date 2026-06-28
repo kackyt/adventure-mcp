@@ -1,13 +1,19 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { FsScenarioStorage, SessionManager } from "engine";
+import { FsSaveStorage, FsScenarioStorage, SaveCodec, SessionManager } from "engine";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createMcpServer } from "./server.ts";
 
 /** 実 assets を読む fs アダプタ＋in-memory transport で end-to-end の配線を検証する。 */
 async function connectClient(): Promise<Client> {
-  const manager = new SessionManager(new FsScenarioStorage());
+  // テスト用の一時ディレクトリを作成
+  const tempSaveDir = "./save-data-test";
+  const manager = new SessionManager(
+    new FsScenarioStorage(),
+    new FsSaveStorage(tempSaveDir),
+    new SaveCodec("test-secret"),
+  );
   const server = createMcpServer(manager);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test-client", version: "1.0.0" });
@@ -32,14 +38,18 @@ describe("MCP server (in-memory transport)", () => {
     client = await connectClient();
   });
 
-  it("6 ツールが登録・公開される", async () => {
+  it("10 ツールが登録・公開される", async () => {
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
       "choose",
+      "delete_save",
       "end_game",
       "get_history",
       "get_situation",
+      "list_saves",
       "list_scenarios",
+      "load_game",
+      "save_game",
       "start_game",
     ]);
   });

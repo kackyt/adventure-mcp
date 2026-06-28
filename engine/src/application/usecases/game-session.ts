@@ -1,6 +1,6 @@
 import type { Choice } from "../../domain/services/scenario-engine.ts";
 import { SessionError } from "../../shared/errors/session-error.ts";
-import type { Snapshot, Turn } from "../dtos/game-dtos.ts";
+import type { GameSessionState, Snapshot, Turn } from "../dtos/game-dtos.ts";
 
 /**
  * {@link GameSession} が依存するシナリオエンジンの操作面。
@@ -16,6 +16,8 @@ export interface PlayableEngine {
   setVariable(name: string, value: unknown): void;
   getVariables(): Record<string, unknown>;
   getPublicVariables(): Record<string, unknown>;
+  getState(): string;
+  loadState(json: string): void;
 }
 
 /** CLI デバッグ専用の生変数アクセサ（mcp-server からは到達させない）。 */
@@ -59,6 +61,44 @@ export class GameSession {
   /** 現在状況のスナップショット（状態は進めない）。 */
   getSituation(): Snapshot {
     return this.snapshot();
+  }
+
+  /** 現在の内部状態をセーブ用 DTO にシリアライズする。 */
+  serialize(): GameSessionState {
+    return {
+      history: this.history.map((t) => ({ ...t })),
+      currentScene: this.currentScene,
+      choices: this.choices.map((c) => ({ ...c })),
+      inkChoiceIndices: [...this.inkChoiceIndices],
+      ended: this.ended,
+      turnCounter: this.turnCounter,
+      inkState: this.engine.getState(),
+    };
+  }
+
+  /**
+   * シリアライズされた状態からセッションを復元する。
+   * @param engine 紐付けるシナリオエンジン
+   * @param state 復元する状態データ
+   */
+  static restore(engine: PlayableEngine, state: GameSessionState): GameSession {
+    engine.loadState(state.inkState);
+    const session = Object.create(GameSession.prototype) as GameSession;
+    Object.defineProperty(session, "engine", {
+      value: engine,
+      writable: false,
+      enumerable: true,
+      configurable: true,
+    });
+    // biome-ignore lint/suspicious/noExplicitAny: factoryメソッド内でのprivate/readonlyへの代入を許可
+    const s = session as any;
+    s.history = state.history.map((t) => ({ ...t }));
+    s.currentScene = state.currentScene;
+    s.choices = state.choices.map((c) => ({ ...c }));
+    s.inkChoiceIndices = [...state.inkChoiceIndices];
+    s.ended = state.ended;
+    s.turnCounter = state.turnCounter;
+    return session;
   }
 
   /** 行動履歴。各ターンは表示済み本文と選んだラベル、最新未選択ターンは null。 */

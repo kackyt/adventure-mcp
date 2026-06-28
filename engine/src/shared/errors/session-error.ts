@@ -11,7 +11,9 @@ export type SessionErrorCode =
   | "unknown_scenario"
   | "choice_out_of_range"
   | "choice_mismatch"
-  | "game_already_ended";
+  | "game_already_ended"
+  | "unknown_save"
+  | "save_tampered";
 
 /**
  * セッション操作の想定内エラー。`code` で種別を、`choices` で（範囲外・不一致時の）
