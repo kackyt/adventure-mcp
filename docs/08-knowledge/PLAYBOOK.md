@@ -1,11 +1,11 @@
 ---
 title: "PLAYBOOK"
-version: "1.6.0"
+version: "1.7.0"
 status: "approved"
 created: "2026-06-01"
-updated: "2026-06-20"
+updated: "2026-06-28"
 owner: "kacky"
-ace_entry_count: 16
+ace_entry_count: 18
 tags: [ace, playbook, knowledge-management]
 references:
   - docs/ACE_FRAMEWORK.md
@@ -482,3 +482,41 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 **Context**: `GameSession.choose` における `expectedText`（選択肢ラベルの期待値）の検証において、空文字や空白が渡された場合に予期せぬ不一致エラー（`choice_mismatch`）が発生する懸念があり、AIレビューの指摘を受けて `trim() !== ""` のガードを追加した。
 
 **Action**: 外部入力やオプショナルなテキストパラメータを用いて文字列の照合ロジックを実行する場合、事前に `.trim()` 等で空文字でないことを確認する。
+
+<a id="ace-18-1"></a>
+
+### ACE-18-1: インフラストラクチャ層のエラーのドメイン例外への変換
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | architecture |
+| Origin     | PR #18       |
+| Date       | 2026-06-28   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: インフラストラクチャ層で発生した汎用的なエラーは、そのまま投げずにドメイン固有のエラーにラップ・変換して投げるべき。
+
+**Context**: PR #18 のセーブ機能実装において、ファイルIO等のインフラ層で発生したエラーをそのまま投げていたが、ドメイン固有の `EngineError` を使用するスタイルガイド違反として指摘された。
+
+**Action**: インフラ層でエラーをキャッチした際は、ドメインの文脈に合わせた専用の例外クラス（例: `EngineError` や `GameError`）に変換して throw する。
+
+<a id="ace-18-2"></a>
+
+### ACE-18-2: プラットフォーム非依存の堅牢な行分割処理
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | coding       |
+| Origin     | PR #18       |
+| Date       | 2026-06-28   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: ファイルや文字列の行分割処理では、特定の改行コードに依存せず、CRLFや末尾の空行を安全に処理できるアプローチを取るべき。
+
+**Context**: PR #18 における `SaveCodec` クラスのデータパース処理で、単純な改行コードでの `split` を行っていたため、プラットフォーム固有の改行や末尾改行に弱いとレビューで指摘された。
+
+**Action**: 行分割を行う際は、正規表現 `split(/\r?\n/)` を利用し、`filter` や `trim` を組み合わせて空行や不要な空白を安全に除去する処理を実装する。
