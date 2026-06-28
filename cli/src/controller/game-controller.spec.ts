@@ -75,6 +75,17 @@ class FakeEngine implements PlayableEngine {
   getPublicVariables(): Record<string, unknown> {
     return {};
   }
+
+  getState(): string {
+    return JSON.stringify({ cursor: this.cursor, chosen: this.chosen });
+  }
+
+  loadState(json: string): void {
+    const s = JSON.parse(json);
+    this.cursor = s.cursor;
+    this.chosen.splice(0, this.chosen.length, ...s.chosen);
+    this.loadNode(this.cursor);
+  }
 }
 
 describe("GameController", () => {

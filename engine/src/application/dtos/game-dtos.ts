@@ -23,3 +23,27 @@ export interface Turn {
 export interface StartedGame extends Snapshot {
   sessionId: string;
 }
+
+/**
+ * GameSession 内部状態のシリアライズ用 DTO。
+ */
+export interface GameSessionState {
+  history: Turn[];
+  currentScene: string;
+  choices: Choice[];
+  inkChoiceIndices: number[];
+  ended: boolean;
+  turnCounter: number;
+  inkState: string;
+}
+
+/**
+ * セーブデータファイルとして暗号化・保存される JSON エンベロープ。
+ */
+export interface SaveEnvelope {
+  saveId: string;
+  scenarioId: string;
+  savedAt: string;
+  schemaVersion: number;
+  session: GameSessionState;
+}

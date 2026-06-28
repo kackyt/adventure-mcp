@@ -7,6 +7,8 @@ export type Command =
   | { kind: "getVar"; name: string }
   | { kind: "setVar"; name: string; value: InkValue }
   | { kind: "toggleVars"; value: boolean | undefined } // ステータスの変数表示切替（未指定はトグル）
+  | { kind: "save"; saveId: string }
+  | { kind: "load"; saveId: string }
   | { kind: "quit" }
   | { kind: "empty" }
   | { kind: "invalid"; reason: string };
@@ -110,8 +112,20 @@ function parseDebugCommand(line: string): Command {
     return { kind: "invalid", reason: ":vars の使い方: :vars [on|off]" };
   }
 
+  if (command === "save") {
+    const saveId = rest[0];
+    if (!saveId) return { kind: "invalid", reason: ":save の使い方: :save <セーブID>" };
+    return { kind: "save", saveId };
+  }
+
+  if (command === "load") {
+    const saveId = rest[0];
+    if (!saveId) return { kind: "invalid", reason: ":load の使い方: :load <セーブID>" };
+    return { kind: "load", saveId };
+  }
+
   return {
     kind: "invalid",
-    reason: `未知のコマンドです: :${command}（:get / :set / :vars / :quit が利用できます）`,
+    reason: `未知のコマンドです: :${command}（:get / :set / :vars / :save / :load / :quit が利用できます）`,
   };
 }

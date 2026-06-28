@@ -20,9 +20,22 @@ export class GameController {
   private statusVisible = false;
   private exited = false;
 
-  constructor(private readonly session: GameSession) {
+  public onSave?: (saveId: string) => void;
+  public onLoad?: (saveId: string) => void;
+
+  constructor(private session: GameSession) {
     // GameSession はコンストラクタで最初の状況まで前進済み。それを取り込む。
     this.applySnapshot(this.session.getSituation());
+  }
+
+  getSession(): GameSession {
+    return this.session;
+  }
+
+  replaceSession(newSession: GameSession): void {
+    this.session = newSession;
+    this.applySnapshot(this.session.getSituation());
+    this.message = { kind: "info", text: "セーブデータを読み込みました。" };
   }
 
   /** quit が要求されたか。driver はこれを見て後始末し終了する。 */
@@ -163,6 +176,29 @@ export class GameController {
         break;
       case "choice":
         this.selectIndex(command.index);
+        break;
+      case "save":
+        if (this.onSave) {
+          try {
+            this.onSave(command.saveId);
+            this.message = { kind: "info", text: `セーブしました: ${command.saveId}` };
+          } catch (e) {
+            this.message = { kind: "error", text: withCause("セーブに失敗しました", e) };
+          }
+        } else {
+          this.message = { kind: "error", text: "セーブ機能が有効ではありません。" };
+        }
+        break;
+      case "load":
+        if (this.onLoad) {
+          try {
+            this.onLoad(command.saveId);
+          } catch (e) {
+            this.message = { kind: "error", text: withCause("ロードに失敗しました", e) };
+          }
+        } else {
+          this.message = { kind: "error", text: "ロード機能が有効ではありません。" };
+        }
         break;
     }
   }

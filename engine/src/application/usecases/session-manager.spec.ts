@@ -1,8 +1,38 @@
 import { Compiler } from "inkjs/compiler/Compiler";
 import { describe, expect, it } from "vitest";
 import { SessionError } from "../../shared/errors/session-error.ts";
+import type { SaveStoragePort } from "../ports/save-storage-port.ts";
 import type { ScenarioStoragePort } from "../ports/scenario-storage-port.ts";
+import { SaveCodec } from "../services/save-codec.ts";
 import { SessionManager } from "./session-manager.ts";
+
+class FakeSaveStorage implements SaveStoragePort {
+  public data = new Map<string, string>();
+  save(saveId: string, text: string): void {
+    this.data.set(saveId, text);
+  }
+  load(saveId: string): string {
+    const text = this.data.get(saveId);
+    if (!text) throw new SessionError("unknown_save", "not found");
+    return text;
+  }
+  list(): string[] {
+    return Array.from(this.data.keys());
+  }
+  delete(saveId: string): void {
+    if (!this.data.delete(saveId)) {
+      throw new SessionError("unknown_save", "not found");
+    }
+  }
+}
+
+function managerWithSave(): { m: SessionManager; saveStorage: FakeSaveStorage; codec: SaveCodec } {
+  const scenarioStorage = new FakeStorage({ counter: COUNTER, other: COUNTER });
+  const saveStorage = new FakeSaveStorage();
+  const codec = new SaveCodec("test-secret");
+  const m = new SessionManager(scenarioStorage, saveStorage, codec);
+  return { m, saveStorage, codec };
+}
 
 function compile(source: string): string {
   const json = new Compiler(source).Compile().ToJson();
@@ -123,5 +153,48 @@ describe("SessionManager", () => {
     // 自動破棄されていないので履歴を引ける
     expect(m.getHistory(sessionId).turns.at(-1)?.choice).toBeNull();
     expect(() => m.getSituation(sessionId)).not.toThrow();
+  });
+
+  describe("セーブ / ロード機能", () => {
+    it("saveGame は進行状態を保存し、loadGame はそれを復元して新しい sessionId を返す", () => {
+      const { m } = managerWithSave();
+      const { sessionId: originalId } = m.startGame("counter");
+      m.choose(originalId, 0); // count = 1
+
+      const saveRes = m.saveGame(originalId, "save-1");
+      expect(saveRes.ok).toBe(true);
+      expect(m.listSaves()).toEqual(["save-1"]);
+
+      const loaded = m.loadGame("save-1");
+      expect(loaded.sessionId).not.toBe(originalId);
+      expect(loaded.status).toEqual({ count: 1 });
+      expect(loaded.choices.map((c) => c.text)).toEqual(["increment", "stop"]);
+
+      // ロード後に再開できるか
+      m.choose(loaded.sessionId, 0); // count = 2
+      expect(m.getSituation(loaded.sessionId).status).toEqual({ count: 2 });
+    });
+
+    it("saveStorage がない場合はエラーになる", () => {
+      const m = manager();
+      const { sessionId } = m.startGame("counter");
+      expect(() => m.saveGame(sessionId, "save-1")).toThrowError(
+        "セーブ機能が設定されていません。",
+      );
+      expect(() => m.loadGame("save-1")).toThrowError("セーブ機能が設定されていません。");
+      expect(() => m.deleteSave("save-1")).toThrowError("セーブ機能が設定されていません。");
+    });
+
+    it("deleteSave はセーブデータを削除する", () => {
+      const { m } = managerWithSave();
+      const { sessionId } = m.startGame("counter");
+      m.saveGame(sessionId, "save-1");
+
+      expect(m.listSaves()).toEqual(["save-1"]);
+      m.deleteSave("save-1");
+      expect(m.listSaves()).toEqual([]);
+
+      expect(() => m.deleteSave("save-1")).toThrowError(SessionError);
+    });
   });
 });

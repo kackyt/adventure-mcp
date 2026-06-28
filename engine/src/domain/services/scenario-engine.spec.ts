@@ -71,4 +71,22 @@ describe("ScenarioEngine", () => {
   it("should throw EngineError on invalid JSON", () => {
     expect(() => new ScenarioEngine({ invalid: "data" })).toThrow(EngineError);
   });
+
+  it("should get and load state successfully", () => {
+    const engine1 = new ScenarioEngine(storyJson);
+    engine1.continue(); // "You are in a dark room."
+    engine1.chooseChoiceIndex(0); // "Look around"
+    engine1.continue(); // "You see a door."
+
+    const stateJson = engine1.getState();
+
+    const engine2 = new ScenarioEngine(storyJson);
+    engine2.loadState(stateJson);
+
+    // engine2 の状態が復元されているか確認
+    expect(engine2.getVariables().player_hp).toBe(100);
+    const choices = engine2.currentChoices;
+    expect(choices).toHaveLength(1);
+    expect(choices[0].text).toBe("Open door");
+  });
 });

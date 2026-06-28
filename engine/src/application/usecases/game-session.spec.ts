@@ -58,6 +58,13 @@ class FakeEngine implements PlayableEngine {
     for (const name of this.publicStatus) out[name] = this.variables[name];
     return out;
   }
+  public savedState = "default_state";
+  getState(): string {
+    return this.savedState;
+  }
+  loadState(json: string): void {
+    this.savedState = json;
+  }
 }
 
 describe("GameSession", () => {
@@ -181,6 +188,42 @@ describe("GameSession", () => {
     expect(session.debug.getVariable("hp")).toBe(100);
     session.debug.setVariable("hp", 30);
     expect(session.debug.getVariables()).toEqual({ hp: 30 });
+  });
+
+  it("serialize と restore を経て状態が復元されること", () => {
+    const engine1 = new FakeEngine([
+      { texts: ["S1"], choices: [[0, "A"]] },
+      { texts: ["S2"], choices: [[0, "B"]] },
+    ]);
+    const session1 = new GameSession(engine1);
+    session1.choose(0); // S2 へ
+
+    const state = session1.serialize();
+    expect(state.history).toHaveLength(2);
+    expect(state.currentScene).toBe("S2");
+    expect(state.choices).toEqual([{ index: 0, text: "B" }]);
+    expect(state.ended).toBe(false);
+    expect(state.turnCounter).toBe(2);
+
+    // 別のエンジンで復元
+    const engine2 = new FakeEngine([
+      { texts: ["dummy"], choices: [] },
+      { texts: ["dummy"], choices: [] },
+    ]);
+    const session2 = GameSession.restore(engine2, state);
+
+    // loadState が呼ばれたか
+    expect(engine2.getState()).toBe(engine1.getState());
+
+    // 状況の復元確認
+    const sit = session2.getSituation();
+    expect(sit.scene).toBe("S2");
+    expect(sit.choices).toEqual([{ index: 0, text: "B" }]);
+    expect(sit.ended).toBe(false);
+
+    // 履歴の復元確認
+    expect(session2.getHistory().turns).toHaveLength(2);
+    expect(session2.getHistory().turns[0].choice).toBe("A");
   });
 });
 

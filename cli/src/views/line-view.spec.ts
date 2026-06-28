@@ -64,6 +64,15 @@ class FakeEngine implements PlayableEngine {
   getPublicVariables(): Record<string, unknown> {
     return {};
   }
+  getState(): string {
+    return JSON.stringify({ cursor: this.cursor, chosen: this.chosen });
+  }
+  loadState(json: string): void {
+    const s = JSON.parse(json);
+    this.cursor = s.cursor;
+    this.chosen.splice(0, this.chosen.length, ...s.chosen);
+    this.loadNode(this.cursor);
+  }
 }
 
 /** 用意した入力列を順に返す IO フェイク。出力とエラーを配列に蓄積する。 */

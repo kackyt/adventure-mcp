@@ -149,4 +149,27 @@ export class ScenarioEngine {
       throw new EngineError("Failed to get public variables", e);
     }
   }
+
+  /**
+   * 現在のシナリオエンジン内部状態（Ink の State）を JSON 文字列として取得します。
+   */
+  public getState(): string {
+    try {
+      return this.story.state.ToJson();
+    } catch (e) {
+      throw new EngineError("Failed to get state", e);
+    }
+  }
+
+  /**
+   * JSON 文字列からシナリオエンジン内部状態（Ink の State）を復元します。
+   * @param json 保存された状態の JSON 文字列
+   */
+  public loadState(json: string): void {
+    try {
+      this.story.state.LoadJson(json);
+    } catch (e) {
+      throw new EngineError("Failed to load state", e);
+    }
+  }
 }
