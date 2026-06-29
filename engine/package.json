@@ -12,7 +12,8 @@
     "test": "vitest run --exclude **/scenarios-structure.spec.ts",
     "test:scenarios": "vitest run scenarios-structure",
     "build:ink": "node scripts/build-ink.ts",
-    "setup:ink": "node scripts/install-inklecate.ts"
+    "setup:ink": "node scripts/install-inklecate.ts",
+    "lint:spoiler": "node scripts/spoiler-lint.ts"
   },
   "dependencies": {
     "inkjs": "^2.2.0"
