@@ -116,3 +116,9 @@ worked example：[character_detail.md](../character_detail.md)。**題材は流�
 ## 必読
 
 章をまたぐ推理長編は [longform_mystery_craft.md](../longform_mystery_craft.md) を着手前に必読（視点の一貫／因果の鎖／情報は「分野の手続き×主人公の立場」でしか出ない 等）。謎の作り方は [puzzle_design.md](../puzzle_design.md)。完成後は `longform-scenario-review` で独立レビュー。
+
+**実装の手本（.ink）**：
+- 殺人・旅する長編＝[hot_spring_circuit.ink](../../../../../docs/06-reference/scenarios/hot_spring_circuit.ink)（観察→帰納→証言→つきつけ／帰納パズル）。
+- **非殺人・胸温まる長編**＝[sewing_box_seam.ink](../../../../../docs/06-reference/scenarios/sewing_box_seam.ink)（なくしもの／すり替えの謎×観察→証言矛盾→つきつけ。誤読→フェアな反転を"温かいregister"で、封印層・伏線台帳、行動で分岐する4結末。**血の出ない題材でも「論理で橋を架ける」手応えを外さない**実例。伏線の"重複による無効化"を避ける設計＝§F も併読）。
+
+> **題材は流用せず、構造だけ範とする**（どちらも架空・実在モデル排除の見本）。
