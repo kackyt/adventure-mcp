@@ -35,6 +35,11 @@ const cfg = JSON.parse(readFileSync(cfgPath, "utf-8").replace(/^﻿/, ""));
 //  設定の既定値
 // ---------------------------------------------------------------------
 const method = (cfg.method || "gronsfeld").toLowerCase();
+const SUPPORTED_METHODS = ["caesar", "gronsfeld", "vigenere", "beaufort", "keyword-substitution"];
+if (!SUPPORTED_METHODS.includes(method)) {
+  console.error(`未対応の暗号方式です: ${method}（対応: ${SUPPORTED_METHODS.join(", ")}）`);
+  process.exit(2);
+}
 const alphabet = (cfg.alphabet || "ABCDEFGHIJKLMNOPQRSTUVWXYZ").toUpperCase();
 const N = alphabet.length;
 const idxOf = (ch) => alphabet.indexOf(ch);
@@ -70,10 +75,13 @@ for (const ch of PT) {
 function keyStream(m, key, length) {
   const s = [];
   if (m === "caesar") {
-    const shift = ((parseInt(String(key), 10) % N) + N) % N;
+    const raw = parseInt(String(key), 10);
+    if (isNaN(raw)) { console.error(`caesar方式の鍵は数値である必要があります: ${key}`); process.exit(2); }
+    const shift = ((raw % N) + N) % N;
     for (let i = 0; i < length; i++) s.push(shift);
   } else if (m === "gronsfeld") {
     const digits = String(key).split("").map((d) => parseInt(d, 10));
+    if (digits.some(isNaN)) { console.error(`gronsfeld方式の鍵は各桁が数値である必要があります: ${key}`); process.exit(2); }
     for (let i = 0; i < length; i++) s.push(((digits[i % digits.length] % N) + N) % N);
   } else if (m === "vigenere" || m === "beaufort") {
     const kc = String(key).toUpperCase().split("");
