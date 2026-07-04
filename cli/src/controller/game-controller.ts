@@ -18,6 +18,8 @@ export class GameController {
   private commandBuffer = "";
   private message: ViewMessage | null = null;
   private statusVisible = false;
+  /** 公開ステータス（`public_status` 宣言分のみ）。現在地の常時表示に使う。 */
+  private publicStatus: Record<string, unknown> = {};
   private exited = false;
 
   public onSave?: (saveId: string) => void;
@@ -92,6 +94,8 @@ export class GameController {
       mode: this.mode,
       // ステータス表示は CLI のデバッグ機能なので生変数全体を見せる（mcp の公開ステータスとは別）
       status: { variables: this.session.debug.getVariables(), visible: this.statusVisible },
+      // 現在地は公開ステータス（public_status）由来。place が公開なら常時表示する。
+      location: this.currentLocation(),
       scene: this.currentScene,
       choices: this.choices.map((choice, i) => ({
         label: choice.text,
@@ -107,9 +111,16 @@ export class GameController {
   private applySnapshot(snapshot: ReturnType<GameSession["getSituation"]>): void {
     this.currentScene = snapshot.scene;
     this.choices = snapshot.choices;
+    this.publicStatus = snapshot.status;
     this.selectedIndex = 0;
     this.message = null;
     this.mode = snapshot.ended ? "ended" : "choosing";
+  }
+
+  /** 公開ステータスに `place` があれば現在地として返す（無ければ null）。 */
+  private currentLocation(): string | null {
+    const value = this.publicStatus.place;
+    return value === undefined || value === null ? null : String(value);
   }
 
   private move(delta: number): void {

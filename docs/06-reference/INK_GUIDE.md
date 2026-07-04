@@ -135,7 +135,7 @@ pnpm --filter engine test
     -> locked_room
 ```
 
-完全なサンプルは [room_escape.ink](../../engine/assets/room_escape.ink) を参照してください。
+完全なサンプルは [room_escape.ink](../../docs/06-reference/scenarios/room_escape.ink) を参照してください。
 
 ### 4.5 公開ステータス変数 `public_status`
 
