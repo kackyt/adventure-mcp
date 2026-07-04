@@ -1,11 +1,11 @@
 ---
 title: "PLAYBOOK"
-version: "1.7.0"
+version: "1.8.0"
 status: "approved"
 created: "2026-06-01"
-updated: "2026-06-28"
+updated: "2026-07-05"
 owner: "kacky"
-ace_entry_count: 18
+ace_entry_count: 20
 tags: [ace, playbook, knowledge-management]
 references:
   - docs/ACE_FRAMEWORK.md
@@ -520,3 +520,41 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 **Context**: PR #18 における `SaveCodec` クラスのデータパース処理で、単純な改行コードでの `split` を行っていたため、プラットフォーム固有の改行や末尾改行に弱いとレビューで指摘された。
 
 **Action**: 行分割を行う際は、正規表現 `split(/\r?\n/)` を利用し、`filter` や `trim` を組み合わせて空行や不要な空白を安全に除去する処理を実装する。
+
+<a id="ace-19-1"></a>
+
+### ACE-19-1: 開発支援スクリプトにおける入力の早期バリデーション
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | tooling |
+| Origin     | PR #19 |
+| Date       | 2026-07-05 |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: 開発支援や自動生成を行うNode.js等のスクリプトでは、設定値や引数のバリデーションを早期に行い、未対応のモードや不正な型の入力に対して早期エラー終了する。
+
+**Context**: PR #19 にて、暗号ギミック生成ツール (`gen_cipher_gimmick.mjs`) で設定された方式や鍵が不正な場合に異常な値を生成しないよう、早期検証とエラー終了を実装した（PRのレビュー指摘対応）。
+
+**Action**: スクリプトが外部設定やコマンドライン引数に依存する場合、処理の開始前にサポートされている値の範囲（ホワイトリスト）や型（例: `isNaN` による数値判定）をチェックし、早期終了（`process.exit`）させるコードを追加する。
+
+<a id="ace-19-2"></a>
+
+### ACE-19-2: ファイルストレージ検証における一時フィクスチャの利用
+
+| フィールド | 値 |
+| ---------- | ------------ |
+| Category   | testing |
+| Origin     | PR #19 |
+| Date       | 2026-07-05 |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: 物理的なファイルI/Oを伴うテストにおいて、本番のアセットや実ファイルに依存すると、ファイルの移動・整理でテストが破損しやすくなるため、一時ディレクトリ内にダミーアセットを動的生成して検証する。
+
+**Context**: PR #19 にて、`FsScenarioStorage` が参照する `engine/assets` 内のシナリオファイルが別ディレクトリに移動されたことに伴い、テストが実ファイルに依存しないよう `mkdtempSync` と `rmSync` を用いた一時ディレクトリでのテスト用フィクスチャ構築方式にリファクタリングした。
+
+**Action**: ファイル読み込みやBOM除去、パス検証などのストレージアダプタ機能のテストでは、`beforeAll`/`afterAll` で一時フォルダ（`mkdtempSync(join(tmpdir(), ...))`）を作成し、その中にテストデータ（BOM付きJSONなど）を書き出して検証し、終了後に再帰削除する。
