@@ -5,6 +5,7 @@ export * from "./application/services/save-codec.ts";
 export * from "./application/usecases/game-session.ts";
 export * from "./application/usecases/session-manager.ts";
 export * from "./domain/services/scenario-engine.ts";
+export * from "./infrastructure/ink/compile-ink.ts";
 export * from "./infrastructure/persistence/fs-save-storage.ts";
 export * from "./infrastructure/persistence/fs-scenario-storage.ts";
 export * from "./shared/errors/engine-error.ts";

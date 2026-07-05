@@ -85,11 +85,11 @@ GM として進行します。**物語の状態は engine(Ink) が一元管理**
 
 このスキルは MCP サーバーの疎通確認も兼ねる。ひと通り以下が通れば結線は健全:
 
-1. `list_scenarios` が `code_lock_poc` を含む id 配列を返す。
-2. `start_game("code_lock_poc")` が `sessionId` と選択肢、`status`（`place`）を返す。
-   `status` に `found_key`（解法フラグ）・`safe_code`（正解変数）・`public_status` が**現れない**こと。
+1. `list_scenarios` が id 配列を返す（少なくとも 1 件）。以下、その一つを `<id>` とする。
+2. `start_game("<id>")` が `sessionId` と選択肢、`status`（公開ステータスのみ）を返す。
+   `status` に解法フラグ（`has_*`/`found_*` 等）・正解変数・`public_status` 自体が**現れない**こと。
 3. `choose(sessionId, 0)` で前進し、次の `scene` が返る。
-4. 「奥の金庫の前に立つ」を選ぶと `awaitingInput: true`・`choices: []` になり、
+4. （自由入力ギミックのあるシナリオなら）入力停止点で `awaitingInput: true`・`choices: []` になり、
    `choose` が `input_required` で拒否される。誤答の `submit_input` では進まず、
    正答でのみ進行する（正答はシナリオの手がかりから統合する。GM が推測しない）。
 5. `get_situation` / `get_history` が状態を進めずに現状・履歴を返す。

@@ -70,7 +70,7 @@ VAR safe_code = ""
 5. **正解値は半角・トリム済みで書く**: 全角入力は半角へ正規化されてから比較されます。
 6. **正解値をノンスポイラーに保つ**: 本文・選択肢ラベルに正解値を書かない。`# input` の変数は `public_status` に載せない。
 
-最小 PoC: `engine/assets/code_lock_poc.ink`（設計論は `puzzle_design.md` §2(A) を参照）。
+最小 PoC: `docs/06-reference/scenarios/code_lock_poc.ink`（設計論は `puzzle_design.md` §2(A) を参照）。
 
 ## 出力ファイルの構成と配置場所
 
