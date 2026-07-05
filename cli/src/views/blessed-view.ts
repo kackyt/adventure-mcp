@@ -5,8 +5,8 @@ import { translateKey } from "./blessed-keys.ts";
 import type { IGameView } from "./game-view.interface.ts";
 
 const HELP_LINE =
-  "[↑↓: 選択  Enter: 決定  数字: 直接選択  PgUp/PgDn: 本文送り  : コマンド  q/Esc: 終了]";
-const INPUT_HELP_LINE = "[文字を入力  Enter: 送信  Backspace: 削除  Esc: 消去  Ctrl-C: 終了]";
+  "[↑↓: 選択  Enter: 決定  数字: 直接選択  PgUp/PgDn: 本文送り  Ctrl-G: コマンド  q/Esc: 終了]";
+const INPUT_HELP_LINE = "[文字を入力  Enter: 送信  Backspace: 削除  Esc: 消去  Ctrl-G: コマンド  Ctrl-C: 終了]";
 
 /**
  * neo-blessed による全画面 TUI View。

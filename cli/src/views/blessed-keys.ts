@@ -18,6 +18,9 @@ export function translateKey(vm: ViewModel, ch: string | undefined, key: KeyLike
   if (key.full === "C-c") {
     return { type: "quit" };
   }
+  if (key.full === "C-g") {
+    return { type: "enterCommandMode" };
+  }
 
   if (vm.command.active) {
     switch (key.name) {
@@ -47,6 +50,7 @@ export function translateKey(vm: ViewModel, ch: string | undefined, key: KeyLike
       case "backspace":
         return { type: "inputBackspace" };
     }
+
     if (ch && ch.length === 1 && ch >= " ") {
       return { type: "inputChar", char: ch };
     }
@@ -72,9 +76,7 @@ export function translateKey(vm: ViewModel, ch: string | undefined, key: KeyLike
     case "q":
       return { type: "quit" };
   }
-  if (ch === ":") {
-    return { type: "enterCommandMode" };
-  }
+
   if (ch && /^[1-9]$/.test(ch)) {
     return { type: "selectIndex", index: Number(ch) - 1 };
   }

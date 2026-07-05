@@ -91,8 +91,11 @@ export class GameController {
         break;
       case "inputSubmit":
         if (this.mode === "input") {
-          const value = this.inputBuffer;
+          let value = this.inputBuffer;
           this.inputBuffer = "";
+          if (value.trim().startsWith("\\:")) {
+            value = value.replace(/^(\s*)\\:/, "$1:");
+          }
           this.submitInput(value);
         }
         break;
@@ -192,9 +195,11 @@ export class GameController {
   private runCommand(raw: string): void {
     // 自由入力待ち中の行入力は、デバッグコマンド（: 始まり）以外を回答として送る
     if (this.mode === "input" && !raw.trim().startsWith(":")) {
-      if (raw.trim().length > 0) {
-        this.submitInput(raw);
+      let value = raw;
+      if (raw.trim().startsWith("\\:")) {
+        value = raw.replace(/^(\s*)\\:/, "$1:");
       }
+      this.submitInput(value);
       return;
     }
     const command = parseInput(raw);
