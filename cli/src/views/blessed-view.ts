@@ -292,7 +292,7 @@ export class BlessedView implements IGameView {
     } else if (id === "pagedown") {
       this.sceneBox.scroll(page);
     }
-    
+
     this.render(vm); // 本文は不変なのでスクロール位置は保持される
     return true;
   }
