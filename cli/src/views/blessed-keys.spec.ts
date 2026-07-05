@@ -10,6 +10,7 @@ function vm(overrides: Partial<ViewModel> = {}): ViewModel {
     scene: "",
     choices: [],
     command: { active: false, buffer: "" },
+    input: { active: false, buffer: "" },
     message: null,
     ended: false,
     ...overrides,
@@ -69,6 +70,28 @@ describe("translateKey", () => {
         type: "commandInput",
         char: " ",
       });
+    });
+  });
+
+  describe("input モード（自由入力待ち）", () => {
+    const input = vm({ mode: "input", input: { active: true, buffer: "" } });
+
+    it("Enter は送信、Backspace は削除、Esc はバッファ消去", () => {
+      expect(translateKey(input, undefined, { name: "return" })).toEqual({ type: "inputSubmit" });
+      expect(translateKey(input, undefined, { name: "backspace" })).toEqual({
+        type: "inputBackspace",
+      });
+      expect(translateKey(input, undefined, { name: "escape" })).toEqual({ type: "inputClear" });
+    });
+
+    it("印字可能文字は inputChar（'q'・数字・':' も回答の一部）", () => {
+      expect(translateKey(input, "q", { name: "q" })).toEqual({ type: "inputChar", char: "q" });
+      expect(translateKey(input, "1", { name: "1" })).toEqual({ type: "inputChar", char: "1" });
+      expect(translateKey(input, ":", { name: ":" })).toEqual({ type: "inputChar", char: ":" });
+    });
+
+    it("Ctrl+C は input モードでも quit", () => {
+      expect(translateKey(input, undefined, { full: "C-c" })).toEqual({ type: "quit" });
     });
   });
 

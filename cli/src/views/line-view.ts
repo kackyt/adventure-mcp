@@ -56,9 +56,15 @@ export class LineView implements IGameView {
       }
 
       this.io.write("");
-      this.io.write(formatChoices(vm.choices.map((choice) => choice.label)));
+      let promptLabel = "入力> ";
+      if (vm.input.active) {
+        this.io.write("（自由入力待ち: 回答を 1 行で入力してください）");
+        promptLabel = "回答> ";
+      } else {
+        this.io.write(formatChoices(vm.choices.map((choice) => choice.label)));
+      }
 
-      const raw = await this.io.prompt("入力> ");
+      const raw = await this.io.prompt(promptLabel);
       if (raw === null) {
         return 0;
       }

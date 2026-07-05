@@ -76,6 +76,25 @@ VAR public_status = "count"
     -> DONE
 `;
 
+/** 自由入力（# input タグ）＋ Ink 側の完全一致判定を含む最小シナリオ。 */
+const CODE_LOCK = `
+VAR door_code = ""
+VAR public_status = ""
+
+-> gate
+=== gate ===
+扉の鍵盤が光っている。 # input: door_code
++ [番号を確かめる] -> check
+=== check ===
+{ door_code == "4823":
+    扉が開いた。
+    -> DONE
+- else:
+    開かない。
+    -> gate
+}
+`;
+
 function manager(): SessionManager {
   return new SessionManager(new FakeStorage({ counter: COUNTER, other: COUNTER }));
 }
@@ -153,6 +172,53 @@ describe("SessionManager", () => {
     // 自動破棄されていないので履歴を引ける
     expect(m.getHistory(sessionId).turns.at(-1)?.choice).toBeNull();
     expect(() => m.getSituation(sessionId)).not.toThrow();
+  });
+
+  describe("自由入力モード (#13, 実 Ink コンパイル)", () => {
+    function codeLockManager(): SessionManager {
+      return new SessionManager(new FakeStorage({ code_lock: CODE_LOCK }));
+    }
+
+    it("input タグで awaitingInput=true・choices 空になり、choose は input_required", () => {
+      const m = codeLockManager();
+      const started = m.startGame("code_lock");
+      expect(started.awaitingInput).toBe(true);
+      expect(started.choices).toEqual([]);
+      try {
+        m.choose(started.sessionId, 0);
+        expect.unreachable();
+      } catch (e) {
+        expect((e as SessionError).code).toBe("input_required");
+      }
+    });
+
+    it("誤入力では進めず（入力待ちへ戻る）、正しい入力でのみ進行する", () => {
+      const m = codeLockManager();
+      const { sessionId } = m.startGame("code_lock");
+
+      const wrong = m.submitInput(sessionId, "0000");
+      expect(wrong.scene).toContain("開かない");
+      expect(wrong.awaitingInput).toBe(true); // gate に戻り再び入力待ち
+      expect(wrong.ended).toBe(false);
+
+      const right = m.submitInput(sessionId, "4823");
+      expect(right.scene).toContain("扉が開いた");
+      expect(right.awaitingInput).toBe(false);
+      expect(right.ended).toBe(true);
+    });
+
+    it("入力待ちでないシナリオへの submitInput は input_not_allowed", () => {
+      const m = manager();
+      const { sessionId } = m.startGame("counter");
+      try {
+        m.submitInput(sessionId, "4823");
+        expect.unreachable();
+      } catch (e) {
+        expect((e as SessionError).code).toBe("input_not_allowed");
+      }
+      // 状態は進んでいない
+      expect(m.getSituation(sessionId).status).toEqual({ count: 0 });
+    });
   });
 
   describe("セーブ / ロード機能", () => {

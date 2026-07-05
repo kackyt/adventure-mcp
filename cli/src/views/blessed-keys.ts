@@ -36,6 +36,23 @@ export function translateKey(vm: ViewModel, ch: string | undefined, key: KeyLike
     return null;
   }
 
+  // 自由入力待ち: 印字可能文字はすべて回答の一部（'q' や数字も含む）。終了は C-c のみ。
+  if (vm.input.active) {
+    switch (key.name) {
+      case "return":
+      case "enter":
+        return { type: "inputSubmit" };
+      case "escape":
+        return { type: "inputClear" };
+      case "backspace":
+        return { type: "inputBackspace" };
+    }
+    if (ch && ch.length === 1 && ch >= " ") {
+      return { type: "inputChar", char: ch };
+    }
+    return null;
+  }
+
   if (vm.ended) {
     if (["q", "escape", "return", "enter"].includes(key.name ?? "")) {
       return { type: "quit" };

@@ -13,9 +13,10 @@ import type { Action, ViewMessage, ViewModel } from "./view-model.ts";
 export class GameController {
   private currentScene = "";
   private choices: Choice[] = [];
-  private mode: "choosing" | "command" | "ended" = "choosing";
+  private mode: "choosing" | "input" | "command" | "ended" = "choosing";
   private selectedIndex = 0;
   private commandBuffer = "";
+  private inputBuffer = "";
   private message: ViewMessage | null = null;
   private statusVisible = false;
   /** 公開ステータス（`public_status` 宣言分のみ）。現在地の常時表示に使う。 */
@@ -79,6 +80,22 @@ export class GameController {
       case "commandCancel":
         this.exitCommandMode();
         break;
+      case "inputChar":
+        if (this.mode === "input") this.inputBuffer += action.char;
+        break;
+      case "inputBackspace":
+        if (this.mode === "input") this.inputBuffer = this.inputBuffer.slice(0, -1);
+        break;
+      case "inputClear":
+        if (this.mode === "input") this.inputBuffer = "";
+        break;
+      case "inputSubmit":
+        if (this.mode === "input") {
+          const value = this.inputBuffer;
+          this.inputBuffer = "";
+          this.submitInput(value);
+        }
+        break;
       case "runCommand":
         this.runCommand(action.raw);
         break;
@@ -102,6 +119,7 @@ export class GameController {
         selected: i === this.selectedIndex,
       })),
       command: { active: this.mode === "command", buffer: this.commandBuffer },
+      input: { active: this.mode === "input", buffer: this.inputBuffer },
       message: this.message,
       ended: this.mode === "ended",
     };
@@ -113,8 +131,9 @@ export class GameController {
     this.choices = snapshot.choices;
     this.publicStatus = snapshot.status;
     this.selectedIndex = 0;
+    this.inputBuffer = "";
     this.message = null;
-    this.mode = snapshot.ended ? "ended" : "choosing";
+    this.mode = snapshot.ended ? "ended" : snapshot.awaitingInput ? "input" : "choosing";
   }
 
   /** 公開ステータスに `place` があれば現在地として返す（無ければ null）。 */
@@ -161,7 +180,23 @@ export class GameController {
     this.commandBuffer = "";
   }
 
+  /** 自由入力の回答を engine へ送る（正誤判定は Ink 側の完全一致）。 */
+  private submitInput(value: string): void {
+    try {
+      this.applySnapshot(this.session.submitInput(value));
+    } catch (e) {
+      this.message = { kind: "error", text: withCause("入力の送信に失敗しました", e) };
+    }
+  }
+
   private runCommand(raw: string): void {
+    // 自由入力待ち中の行入力は、デバッグコマンド（: 始まり）以外を回答として送る
+    if (this.mode === "input" && !raw.trim().startsWith(":")) {
+      if (raw.trim().length > 0) {
+        this.submitInput(raw);
+      }
+      return;
+    }
     const command = parseInput(raw);
     switch (command.kind) {
       case "empty":

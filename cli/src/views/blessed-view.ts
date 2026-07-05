@@ -6,6 +6,7 @@ import type { IGameView } from "./game-view.interface.ts";
 
 const HELP_LINE =
   "[↑↓: 選択  Enter: 決定  数字: 直接選択  : コマンド(:get/:set/:vars)  q/Esc: 終了]";
+const INPUT_HELP_LINE = "[文字を入力  Enter: 送信  Backspace: 削除  Esc: 消去  Ctrl-C: 終了]";
 
 /**
  * neo-blessed による全画面 TUI View。
@@ -153,6 +154,10 @@ export class BlessedView implements IGameView {
       this.choicesBox.setContent(
         "{yellow-fg}━━━ 終わり ━━━{/yellow-fg}\n{gray-fg}（Enter または q で終了）{/gray-fg}",
       );
+    } else if (vm.input.active) {
+      this.choicesBox.setContent(
+        "{cyan-fg}▸ 自由入力待ち{/cyan-fg}\n{gray-fg}（最下段に回答を入力し Enter で送信）{/gray-fg}",
+      );
     } else {
       const choiceLines = vm.choices.map((choice, i) => {
         const label = `${i + 1}) ${esc(choice.label)}`;
@@ -174,7 +179,9 @@ export class BlessedView implements IGameView {
     this.commandLine.setContent(
       vm.command.active
         ? `{bold}入力>{/bold} ${esc(vm.command.buffer)}`
-        : `{gray-fg}${HELP_LINE}{/gray-fg}`,
+        : vm.input.active
+          ? `{bold}回答>{/bold} ${esc(vm.input.buffer)}{inverse} {/inverse}  {gray-fg}${INPUT_HELP_LINE}{/gray-fg}`
+          : `{gray-fg}${HELP_LINE}{/gray-fg}`,
     );
 
     this.screen.render();

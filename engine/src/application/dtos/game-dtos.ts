@@ -8,6 +8,11 @@ export interface Snapshot {
   choices: Choice[];
   /** `public_status` で公開宣言された変数のみ。 */
   status: Record<string, unknown>;
+  /**
+   * 自由入力待ち（`# input: <var>` タグ検出中）か。true のとき `choices` は空で、
+   * submit_input（CLI ではテキスト入力）でのみ前進できる。注入先の変数名は秘匿する。
+   */
+  awaitingInput: boolean;
   /** 選択肢が無く、これ以上進めない終端か。 */
   ended: boolean;
 }
@@ -35,6 +40,8 @@ export interface GameSessionState {
   ended: boolean;
   turnCounter: number;
   inkState: string;
+  /** 自由入力待ちなら注入先の Ink 変数名、それ以外は null（このフィールドが無い旧セーブは null 扱い）。 */
+  awaitingInputVar?: string | null;
 }
 
 /**

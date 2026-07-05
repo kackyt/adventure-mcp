@@ -16,10 +16,14 @@ function controller(engine: PlayableEngine): GameController {
 interface FakeNode {
   texts: string[];
   choices: string[];
+  /** texts の各行に付くタグ（`#` 抜き）。省略時はタグなし。 */
+  tags?: string[][];
 }
 
 class FakeEngine implements PlayableEngine {
   private textQueue: string[] = [];
+  private tagQueue: string[][] = [];
+  private lastTags: string[] = [];
   private choices: Choice[] = [];
   private readonly variables: Record<string, unknown>;
   public readonly chosen: number[] = [];
@@ -37,6 +41,8 @@ class FakeEngine implements PlayableEngine {
   private loadNode(index: number): void {
     const node = this.nodes[index];
     this.textQueue = [...node.texts];
+    this.tagQueue = node.texts.map((_, i) => node.tags?.[i] ?? []);
+    this.lastTags = [];
     this.choices = node.choices.map((text, i) => ({ index: i, text }));
   }
 
@@ -45,7 +51,12 @@ class FakeEngine implements PlayableEngine {
   }
 
   continue(): string {
+    this.lastTags = this.tagQueue.shift() ?? [];
     return this.textQueue.shift() ?? "";
+  }
+
+  get currentTags(): string[] {
+    return this.lastTags;
   }
 
   get currentChoices(): Choice[] {
@@ -291,6 +302,72 @@ describe("GameController", () => {
     const c = controller(engine);
     c.apply({ type: "runCommand", raw: "2" });
     expect(engine.chosen).toEqual([1]);
+  });
+
+  it("自由入力待ちでは input モードになり、選択肢は表示されない", () => {
+    const engine = new FakeEngine(
+      [{ texts: ["ダイヤルが目の前にある。"], tags: [["input: code"]], choices: ["合わせる"] }],
+      { code: "" },
+    );
+    const vm = controller(engine).getViewModel();
+    expect(vm.mode).toBe("input");
+    expect(vm.input).toEqual({ active: true, buffer: "" });
+    expect(vm.choices).toEqual([]); // 継続用の隠し選択肢を露出しない
+  });
+
+  it("input モードで文字入力・削除・送信ができ、値が Ink 変数に注入される", () => {
+    const engine = new FakeEngine(
+      [
+        { texts: ["ダイヤル。"], tags: [["input: code"]], choices: ["合わせる"] },
+        { texts: ["違うようだ。"], choices: ["戻る"] },
+      ],
+      { code: "" },
+    );
+    const c = controller(engine);
+    for (const char of "12x") c.apply({ type: "inputChar", char });
+    c.apply({ type: "inputBackspace" });
+    expect(c.getViewModel().input.buffer).toBe("12");
+
+    c.apply({ type: "inputSubmit" });
+    expect(engine.getVariables().code).toBe("12");
+    expect(c.getViewModel().mode).toBe("choosing");
+    expect(c.getViewModel().scene).toBe("違うようだ。");
+  });
+
+  it("inputClear でバッファだけ消え input モードに留まる", () => {
+    const engine = new FakeEngine(
+      [{ texts: ["ダイヤル。"], tags: [["input: code"]], choices: ["合わせる"] }],
+      { code: "" },
+    );
+    const c = controller(engine);
+    for (const char of "99") c.apply({ type: "inputChar", char });
+    c.apply({ type: "inputClear" });
+    expect(c.getViewModel()).toMatchObject({ mode: "input", input: { buffer: "" } });
+  });
+
+  it("line View 経由（runCommand）でも input モードなら行を回答として送信する", () => {
+    const engine = new FakeEngine(
+      [
+        { texts: ["ダイヤル。"], tags: [["input: code"]], choices: ["合わせる"] },
+        { texts: ["先へ。"], choices: [] },
+      ],
+      { code: "" },
+    );
+    const c = controller(engine);
+    c.apply({ type: "runCommand", raw: "2691" }); // 数字でも選択肢でなく回答として扱う
+    expect(engine.getVariables().code).toBe("2691");
+    expect(c.getViewModel().ended).toBe(true);
+  });
+
+  it("input モードでも : 始まりの行はデバッグコマンドとして動く", () => {
+    const engine = new FakeEngine(
+      [{ texts: ["ダイヤル。"], tags: [["input: code"]], choices: ["合わせる"] }],
+      { code: "" },
+    );
+    const c = controller(engine);
+    c.apply({ type: "runCommand", raw: ":get code" });
+    expect(c.getViewModel().message).toEqual({ kind: "info", text: 'code = ""' });
+    expect(c.getViewModel().mode).toBe("input"); // 状態は進まない
   });
 
   it("quit / :quit で exitRequested が立つ", () => {
