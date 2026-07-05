@@ -280,17 +280,19 @@ export class BlessedView implements IGameView {
    * 上下にスクロールして再描画する。処理したら true を返し、キー翻訳を抑止する。
    */
   private handleSceneScroll(vm: ViewModel, key: blessed.Widgets.Events.IKeyEventArg): boolean {
-    // コマンド/自由入力中は本文スクロールより文字入力を優先する
-    if (vm.command.active || vm.input.active) return false;
     const id = key.full ?? key.name;
+    // PgUp / PgDn 以外のキー入力なら false を返して後続の文字入力処理へ委譲
+    if (id !== "pageup" && id !== "pagedown") {
+      return false;
+    }
+
     const page = Math.max(1, Number(this.sceneBox.height) - Number(this.sceneBox.iheight) - 1);
     if (id === "pageup") {
       this.sceneBox.scroll(-page);
     } else if (id === "pagedown") {
       this.sceneBox.scroll(page);
-    } else {
-      return false;
     }
+    
     this.render(vm); // 本文は不変なのでスクロール位置は保持される
     return true;
   }

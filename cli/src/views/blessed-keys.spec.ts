@@ -40,8 +40,8 @@ describe("translateKey", () => {
       expect(translateKey(vm(), undefined, { name: "escape" })).toEqual({ type: "quit" });
     });
 
-    it("':' は commandMode、数字は selectIndex（0 始まり）", () => {
-      expect(translateKey(vm(), ":", { name: ":" })).toEqual({ type: "enterCommandMode" });
+    it("'C-g' は commandMode、数字は selectIndex（0 始まり）", () => {
+      expect(translateKey(vm(), undefined, { full: "C-g" })).toEqual({ type: "enterCommandMode" });
       expect(translateKey(vm(), "1", { name: "1" })).toEqual({ type: "selectIndex", index: 0 });
       expect(translateKey(vm(), "3", { name: "3" })).toEqual({ type: "selectIndex", index: 2 });
     });

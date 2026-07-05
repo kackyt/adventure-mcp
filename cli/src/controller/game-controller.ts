@@ -178,7 +178,8 @@ export class GameController {
 
   private exitCommandMode(): void {
     if (this.mode === "command") {
-      this.mode = "choosing";
+      const s = this.session.getSituation();
+      this.mode = s.ended ? "ended" : s.awaitingInput ? "input" : "choosing";
     }
     this.commandBuffer = "";
   }
