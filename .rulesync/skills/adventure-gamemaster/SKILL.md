@@ -9,7 +9,7 @@ description: >-
 
 # Adventure Game Master
 
-`.mcp.json` で登録された MCP サーバー `adventure` の 6 ツールを使って、テキストアドベンチャーを
+`.mcp.json` で登録された MCP サーバー `adventure` のツール群を使って、テキストアドベンチャーを
 GM として進行します。**物語の状態は engine(Ink) が一元管理**しており、あなたは作者が書いた
 可視情報（本文・選択肢・公開ステータス）だけを受け取って演出します。
 
@@ -27,6 +27,7 @@ GM として進行します。**物語の状態は engine(Ink) が一元管理**
 | `list_scenarios` | プレイ可能なシナリオ id の一覧 |
 | `start_game(scenarioId)` | ゲーム開始。`{ sessionId, scene, choices, status, ended }` |
 | `choose(sessionId, index, expectedText?)` | 行動を選んで前進。`index` は提示順 0..n-1 |
+| `submit_input(sessionId, value)` | **自由入力待ち（`awaitingInput: true`）専用。** プレイヤーの回答を一字一句そのまま渡して前進 |
 | `get_situation(sessionId)` | 状態を進めず現在の状況・行動・ステータスを再取得 |
 | `get_history(sessionId)` | これまでの本文と選んだラベルの履歴 |
 | `save_game(sessionId, saveId)` | 現在の進行状態を指定したセーブIDとして保存 |
@@ -57,9 +58,16 @@ GM として進行します。**物語の状態は engine(Ink) が一元管理**
      `expectedText` には対応付けた選択肢の**ラベル文字列**を渡す（off-by-one を engine 側で弾く保険。
      `choice_mismatch` が返ったら番号変換を 1 つずらして見直す）。
    - 戻り値の `scene`/`choices`/`status` で次の状況を語る。
+   - **自由入力待ち（`awaitingInput: true`・`choices` は空）のとき**は、選択肢を提示する代わりに
+     「回答を入力してほしい」と促し、ユーザーの回答を `submit_input(sessionId, value)` で送る。
+     - `value` にはユーザーの回答を**一字一句そのまま**渡す。**正誤の推測・補正・言い換え・
+       ヒントの追加をしない**（正誤判定はシナリオ側が完全一致で行う）。
+     - 誤答でも物語は作者の書いた失敗描写で続く。勝手に「惜しい」等の判定を語らない。
 4. **エラー時のふるまい**（ツール結果が `isError: true` のとき。`code` を見て対応）
    - `choice_out_of_range` / `choice_mismatch`: 同梱された現在の `choices` を**そのまま再提示**し、
      ユーザーに選び直してもらう（勝手に別の選択肢を選ばない）。
+   - `input_required`: いまは自由入力待ち。選択肢でなく `submit_input` で回答を送る。
+   - `input_not_allowed`: 自由入力待ちではない。同梱の `choices` から `choose` で選び直す。
    - `game_already_ended`: 物語は終わっている。`get_history` で振り返るか `end_game` する。
    - `unknown_session`: セッションが無効。`start_game` からやり直す。
    - `unknown_scenario`: id が不正。`list_scenarios` の値だけを使う。
@@ -77,9 +85,12 @@ GM として進行します。**物語の状態は engine(Ink) が一元管理**
 
 このスキルは MCP サーバーの疎通確認も兼ねる。ひと通り以下が通れば結線は健全:
 
-1. `list_scenarios` が `public_status_demo` を含む id 配列を返す。
-2. `start_game("public_status_demo")` が `sessionId` と選択肢、`status`（`player_hp` 等）を返す。
-   `status` に `has_master_key`（解法フラグ）や `public_status` が**現れない**こと。
-3. `choose(sessionId, 0)` で前進し、`status` が更新される。
-4. `get_situation` / `get_history` が状態を進めずに現状・履歴を返す。
-5. `end_game(sessionId)` 後、同 `sessionId` の操作が `unknown_session` になる。
+1. `list_scenarios` が id 配列を返す（少なくとも 1 件）。以下、その一つを `<id>` とする。
+2. `start_game("<id>")` が `sessionId` と選択肢、`status`（公開ステータスのみ）を返す。
+   `status` に解法フラグ（`has_*`/`found_*` 等）・正解変数・`public_status` 自体が**現れない**こと。
+3. `choose(sessionId, 0)` で前進し、次の `scene` が返る。
+4. （自由入力ギミックのあるシナリオなら）入力停止点で `awaitingInput: true`・`choices: []` になり、
+   `choose` が `input_required` で拒否される。誤答の `submit_input` では進まず、
+   正答でのみ進行する（正答はシナリオの手がかりから統合する。GM が推測しない）。
+5. `get_situation` / `get_history` が状態を進めずに現状・履歴を返す。
+6. `end_game(sessionId)` 後、同 `sessionId` の操作が `unknown_session` になる。

@@ -14,10 +14,14 @@ function controller(engine: PlayableEngine): GameController {
 interface FakeNode {
   texts: string[];
   choices: string[];
+  /** texts の各行に付くタグ（`#` 抜き）。省略時はタグなし。 */
+  tags?: string[][];
 }
 
 class FakeEngine implements PlayableEngine {
   private textQueue: string[] = [];
+  private tagQueue: string[][] = [];
+  private lastTags: string[] = [];
   private choices: Choice[] = [];
   private readonly variables: Record<string, unknown>;
   public readonly chosen: number[] = [];
@@ -35,6 +39,8 @@ class FakeEngine implements PlayableEngine {
   private loadNode(index: number): void {
     const node = this.nodes[index];
     this.textQueue = [...node.texts];
+    this.tagQueue = node.texts.map((_, i) => node.tags?.[i] ?? []);
+    this.lastTags = [];
     this.choices = node.choices.map((text, i) => ({ index: i, text }));
   }
 
@@ -42,7 +48,11 @@ class FakeEngine implements PlayableEngine {
     return this.textQueue.length > 0;
   }
   continue(): string {
+    this.lastTags = this.tagQueue.shift() ?? [];
     return this.textQueue.shift() ?? "";
+  }
+  get currentTags(): string[] {
+    return this.lastTags;
   }
   get currentChoices(): Choice[] {
     return this.choices;
@@ -172,6 +182,26 @@ describe("LineView", () => {
 
     expect(io.out).toContain("hp = 100");
     expect(io.out).toContain("hp = 30");
+  });
+
+  it("自由入力待ちでは回答プロンプトを出し、行入力を回答として送信する", async () => {
+    const engine = new FakeEngine(
+      [
+        { texts: ["ダイヤルが目の前にある。"], tags: [["input: code"]], choices: ["合わせる"] },
+        { texts: ["扉が開いた。"], choices: [] },
+      ],
+      { code: "" },
+    );
+    const io = new FakeIO(["2691"]);
+
+    const code = await new LineView(io).run(controller(engine));
+
+    expect(code).toBe(0);
+    expect(io.out.some((l) => l.includes("自由入力待ち"))).toBe(true);
+    // 選択肢リストは表示されない（隠し継続選択肢を露出しない）
+    expect(io.out.some((l) => l.includes("1) 合わせる"))).toBe(false);
+    expect(engine.getVariables().code).toBe("2691");
+    expect(io.out).toContain("扉が開いた。");
   });
 
   it(":quit で 0 を返す", async () => {

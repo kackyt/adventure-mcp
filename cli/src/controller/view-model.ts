@@ -1,8 +1,8 @@
 // GameSession が依存するエンジン操作面。テスト用フェイクはこれを実装する。
 export type { PlayableEngine } from "engine";
 
-/** 現在の操作モード。 */
-export type ViewMode = "choosing" | "command" | "ended";
+/** 現在の操作モード。`input` はシナリオの自由入力待ち（`# input:` タグ検出中）。 */
+export type ViewMode = "choosing" | "input" | "command" | "ended";
 
 /** 直近の操作結果メッセージ（:get の値やエラー）。 */
 export interface ViewMessage {
@@ -28,6 +28,8 @@ export interface ViewModel {
   scene: string;
   choices: ViewChoice[];
   command: { active: boolean; buffer: string };
+  /** 自由入力待ち。active のとき choices は空で、buffer が入力中の回答。 */
+  input: { active: boolean; buffer: string };
   message: ViewMessage | null;
   ended: boolean;
 }
@@ -46,5 +48,9 @@ export type Action =
   | { type: "commandBackspace" }
   | { type: "commandSubmit" } // Enter: 内部バッファを parse して適用
   | { type: "commandCancel" } // Esc: コマンドモード解除
+  | { type: "inputChar"; char: string } // 自由入力待ちで 1 文字入力
+  | { type: "inputBackspace" }
+  | { type: "inputClear" } // Esc: 入力バッファを消去（入力モード自体は抜けられない）
+  | { type: "inputSubmit" } // Enter: 内部バッファを回答として送信
   | { type: "runCommand"; raw: string } // line View 用: 1 行を一括 parse 適用
   | { type: "quit" };

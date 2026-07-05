@@ -14,6 +14,7 @@ const snapshotShape = {
   scene: z.string(),
   choices: z.array(choiceShape),
   status: z.record(z.unknown()),
+  awaitingInput: z.boolean(),
   ended: z.boolean(),
 };
 
@@ -49,7 +50,7 @@ function guard(run: () => unknown): CallToolResult {
   }
 }
 
-/** SessionManager を 6 つの MCP ツールとして登録する（トランスポート非依存）。 */
+/** SessionManager を 11 個の MCP ツールとして登録する（トランスポート非依存）。 */
 export function registerTools(server: McpServer, manager: SessionManager): void {
   server.registerTool(
     "list_scenarios",
@@ -76,7 +77,7 @@ export function registerTools(server: McpServer, manager: SessionManager): void 
     "choose",
     {
       description:
-        "提示中の選択肢を index（提示順 0..n-1）で選び、次の状況まで前進する。expectedText を渡すと、選んだ選択肢ラベルと正規化のうえ照合し、不一致なら状態を進めず choice_mismatch を返す。",
+        "提示中の選択肢を index（提示順 0..n-1）で選び、次の状況まで前進する。expectedText を渡すと、選んだ選択肢ラベルと正規化のうえ照合し、不一致なら状態を進めず choice_mismatch を返す。自由入力待ち（awaitingInput=true）のときは input_required で拒否されるため submit_input を使う。",
       inputSchema: {
         sessionId: z.string(),
         index: z.number().int(),
@@ -86,6 +87,20 @@ export function registerTools(server: McpServer, manager: SessionManager): void 
     },
     ({ sessionId, index, expectedText }) =>
       guard(() => manager.choose(sessionId, index, expectedText)),
+  );
+
+  server.registerTool(
+    "submit_input",
+    {
+      description:
+        "自由入力待ち（awaitingInput=true）のときだけ使える。プレイヤーが答えた入力値（暗証番号・合言葉など）を一字一句そのまま渡して前進する。正誤の判定はシナリオ側が完全一致で行うため、呼び出し側で正誤を推測・補正・言い換えしてはならない。入力待ちでないときは input_not_allowed で拒否される。",
+      inputSchema: {
+        sessionId: z.string(),
+        value: z.string(),
+      },
+      outputSchema: snapshotShape,
+    },
+    ({ sessionId, value }) => guard(() => manager.submitInput(sessionId, value)),
   );
 
   server.registerTool(

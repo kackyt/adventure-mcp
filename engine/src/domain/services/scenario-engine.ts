@@ -44,6 +44,18 @@ export class ScenarioEngine {
   }
 
   /**
+   * 直近の continue() で読んだ行に付与されたタグの一覧を取得します。
+   * 入力モードタグ（`# input: <var>`）の検出などに使います。
+   */
+  public get currentTags(): string[] {
+    try {
+      return this.story.currentTags ?? [];
+    } catch (e) {
+      throw new EngineError("Failed to get current tags", e);
+    }
+  }
+
+  /**
    * 現在選択可能な選択肢の一覧を取得します。
    */
   public get currentChoices(): Choice[] {

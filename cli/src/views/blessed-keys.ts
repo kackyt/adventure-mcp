@@ -18,6 +18,9 @@ export function translateKey(vm: ViewModel, ch: string | undefined, key: KeyLike
   if (key.full === "C-c") {
     return { type: "quit" };
   }
+  if (key.full === "C-g") {
+    return { type: "enterCommandMode" };
+  }
 
   if (vm.command.active) {
     switch (key.name) {
@@ -32,6 +35,24 @@ export function translateKey(vm: ViewModel, ch: string | undefined, key: KeyLike
     // 制御文字を除く 1 文字を入力として受け取る（'q' 等もコマンド文字列の一部）
     if (ch && ch.length === 1 && ch >= " ") {
       return { type: "commandInput", char: ch };
+    }
+    return null;
+  }
+
+  // 自由入力待ち: 印字可能文字はすべて回答の一部（'q' や数字も含む）。終了は C-c のみ。
+  if (vm.input.active) {
+    switch (key.name) {
+      case "return":
+      case "enter":
+        return { type: "inputSubmit" };
+      case "escape":
+        return { type: "inputClear" };
+      case "backspace":
+        return { type: "inputBackspace" };
+    }
+
+    if (ch && ch.length === 1 && ch >= " ") {
+      return { type: "inputChar", char: ch };
     }
     return null;
   }
@@ -55,9 +76,7 @@ export function translateKey(vm: ViewModel, ch: string | undefined, key: KeyLike
     case "q":
       return { type: "quit" };
   }
-  if (ch === ":") {
-    return { type: "enterCommandMode" };
-  }
+
   if (ch && /^[1-9]$/.test(ch)) {
     return { type: "selectIndex", index: Number(ch) - 1 };
   }

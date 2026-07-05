@@ -43,10 +43,18 @@ export class SessionManager {
   }
 
   /**
-   * @throws {SessionError} unknown_session / game_already_ended / choice_out_of_range / choice_mismatch
+   * @throws {SessionError} unknown_session / game_already_ended / input_required / choice_out_of_range / choice_mismatch
    */
   choose(sessionId: string, index: number, expectedText?: string): Snapshot {
     return this.getSession(sessionId).choose(index, expectedText);
+  }
+
+  /**
+   * 自由入力待ちのセッションへ入力値を注入して前進する。正誤判定は Ink 側の完全一致比較のみ。
+   * @throws {SessionError} unknown_session / game_already_ended / input_not_allowed
+   */
+  submitInput(sessionId: string, value: string): Snapshot {
+    return this.getSession(sessionId).submitInput(value);
   }
 
   /** @throws {SessionError} unknown_session */

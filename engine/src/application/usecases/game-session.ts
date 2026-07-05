@@ -1,4 +1,5 @@
 import type { Choice } from "../../domain/services/scenario-engine.ts";
+import { EngineError } from "../../shared/errors/engine-error.ts";
 import { SessionError } from "../../shared/errors/session-error.ts";
 import type { GameSessionState, Snapshot, Turn } from "../dtos/game-dtos.ts";
 
@@ -10,6 +11,7 @@ import type { GameSessionState, Snapshot, Turn } from "../dtos/game-dtos.ts";
 export interface PlayableEngine {
   canContinue(): boolean;
   continue(): string;
+  readonly currentTags: string[];
   readonly currentChoices: Choice[];
   chooseChoiceIndex(index: number): void;
   getVariable(name: string): unknown;
@@ -41,6 +43,20 @@ export function normalizeChoiceLabel(label: string): string {
 }
 
 /**
+ * 自由入力値の正規化。NFKC（全角英数→半角など）＋前後トリムのみで、
+ * 同義語解釈のような曖昧マッチは一切行わない（正誤判定は Ink 側の完全一致）。
+ */
+export function normalizeInputValue(value: string): string {
+  return value.normalize("NFKC").trim();
+}
+
+/**
+ * 入力モードタグの書式。`# input: <var>` の `<var>`（Ink の識別子）を取り出す。
+ * inkjs の currentTags は `#` を除いた文字列を返すため、`input: var` 形式に照合する。
+ */
+const INPUT_TAG_PATTERN = /^input\s*:\s*([A-Za-z_][A-Za-z0-9_]*)$/;
+
+/**
  * 1 ゲーム分の進行状態を保持する集約。CLI（単一）と mcp-server の SessionManager
  * （複数）の双方で共用される「前進プリミティブ」。状態遷移は Ink に一任し、外部へは
  * 公開スナップショットと履歴のみを出す。
@@ -51,6 +67,8 @@ export class GameSession {
   private choices: Choice[] = [];
   /** 提示順 index → Ink の生 choice index の対応表。 */
   private inkChoiceIndices: number[] = [];
+  /** 自由入力待ちなら注入先の Ink 変数名、それ以外は null。 */
+  private awaitingInputVar: string | null = null;
   private ended = false;
   private turnCounter = 0;
 
@@ -73,6 +91,7 @@ export class GameSession {
       ended: this.ended,
       turnCounter: this.turnCounter,
       inkState: this.engine.getState(),
+      awaitingInputVar: this.awaitingInputVar,
     };
   }
 
@@ -98,6 +117,8 @@ export class GameSession {
     s.inkChoiceIndices = [...state.inkChoiceIndices];
     s.ended = state.ended;
     s.turnCounter = state.turnCounter;
+    // 入力モード導入前の旧セーブにはフィールドが無いため null（通常モード）に倒す
+    s.awaitingInputVar = state.awaitingInputVar ?? null;
     return session;
   }
 
@@ -116,6 +137,12 @@ export class GameSession {
   choose(index: number, expectedText?: string): Snapshot {
     if (this.ended) {
       throw new SessionError("game_already_ended", "ゲームは既に終了しています。");
+    }
+    if (this.awaitingInputVar !== null) {
+      throw new SessionError(
+        "input_required",
+        "いまは自由入力待ちです。選択肢ではなく、入力値を submit_input で送ってください。",
+      );
     }
     if (!Number.isInteger(index) || index < 0 || index >= this.choices.length) {
       throw new SessionError(
@@ -150,6 +177,36 @@ export class GameSession {
     return this.snapshot();
   }
 
+  /**
+   * 自由入力待ちのときに入力値を Ink 変数へ注入し、次の状況まで前進する。
+   * 値は NFKC＋トリムの正規化のみ行い、正誤判定はシナリオ（Ink）側の完全一致比較に一任する。
+   * @param value プレイヤーの入力値（暗証番号・合言葉など）
+   * @throws {SessionError} game_already_ended / input_not_allowed
+   */
+  submitInput(value: string): Snapshot {
+    if (this.ended) {
+      throw new SessionError("game_already_ended", "ゲームは既に終了しています。");
+    }
+    if (this.awaitingInputVar === null) {
+      throw new SessionError(
+        "input_not_allowed",
+        "自由入力待ちではありません。choices から choose で行動を選んでください。",
+        this.snapshotChoices(),
+      );
+    }
+    const normalized = normalizeInputValue(value);
+    // 直近（最新・未選択）ターンに入力したことを刻む
+    const latest = this.history[this.history.length - 1];
+    if (latest) {
+      latest.choice = `入力: ${normalized}`;
+    }
+    this.engine.setVariable(this.awaitingInputVar, normalized);
+    // 入力モードの継続用選択肢（唯一の選択肢）を選んで物語を進める
+    this.engine.chooseChoiceIndex(this.inkChoiceIndices[0]);
+    this.advance();
+    return this.snapshot();
+  }
+
   /** CLI デバッグ専用の生変数アクセサ。mcp-server はこの経路を import しない。 */
   get debug(): DebugAccessor {
     return {
@@ -162,10 +219,17 @@ export class GameSession {
   /** 選択肢提示か終端まで continue を回し、本文を蓄積して現在ターンを確定する。 */
   private advance(): void {
     const parts: string[] = [];
+    let inputVar: string | null = null;
     while (this.engine.canContinue()) {
       const text = this.engine.continue().replace(/\s+$/u, "");
       if (text.length > 0) {
         parts.push(text);
+      }
+      for (const tag of this.engine.currentTags) {
+        const matched = INPUT_TAG_PATTERN.exec(tag.trim());
+        if (matched) {
+          inputVar = matched[1];
+        }
       }
     }
     this.currentScene = parts.join("\n");
@@ -173,15 +237,39 @@ export class GameSession {
     this.inkChoiceIndices = raw.map((c) => c.index);
     this.choices = raw.map((c, i) => ({ index: i, text: c.text }));
     this.ended = this.choices.length === 0;
+    this.awaitingInputVar = inputVar === null ? null : this.validateInputMode(inputVar);
     this.turnCounter += 1;
     this.history.push({ turn: this.turnCounter, scene: this.currentScene, choice: null });
+  }
+
+  /**
+   * `# input: <var>` タグを検出した停止点の作者契約を検証する。
+   * 破っている場合はシナリオの実装ミスとして {@link EngineError}（想定外失敗）で落とす。
+   */
+  private validateInputMode(inputVar: string): string {
+    if (this.choices.length !== 1) {
+      throw new EngineError(
+        `入力モード（# input: ${inputVar}）の停止点には、物語を継続するための選択肢が` +
+          `ちょうど 1 つ必要です（現在 ${this.choices.length} 個）。`,
+      );
+    }
+    const current = this.engine.getVariable(inputVar);
+    // Ink の VAR は非 null 初期値を持つため、null/undefined は未宣言変数とみなす
+    if (current === null || current === undefined) {
+      throw new EngineError(
+        `入力モードの注入先変数 ${inputVar} が VAR 宣言されていません（# input タグの変数名を確認してください）。`,
+      );
+    }
+    return inputVar;
   }
 
   private snapshot(): Snapshot {
     return {
       scene: this.currentScene,
-      choices: this.snapshotChoices(),
+      // 入力モード中は継続用選択肢を秘匿し、submit_input のみを前進経路にする
+      choices: this.awaitingInputVar === null ? this.snapshotChoices() : [],
       status: this.engine.getPublicVariables(),
+      awaitingInput: this.awaitingInputVar !== null,
       ended: this.ended,
     };
   }

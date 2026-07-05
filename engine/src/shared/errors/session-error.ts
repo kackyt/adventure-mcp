@@ -12,6 +12,8 @@ export type SessionErrorCode =
   | "choice_out_of_range"
   | "choice_mismatch"
   | "game_already_ended"
+  | "input_required"
+  | "input_not_allowed"
   | "unknown_save"
   | "save_tampered";
 
@@ -23,7 +25,7 @@ export class SessionError extends Error {
   constructor(
     public readonly code: SessionErrorCode,
     message: string,
-    /** choice_out_of_range / choice_mismatch のとき、再提示用の現在の選択肢。 */
+    /** choice_out_of_range / choice_mismatch / input_not_allowed のとき、再提示用の現在の選択肢。 */
     public readonly choices?: Choice[],
   ) {
     super(message);

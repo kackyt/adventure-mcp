@@ -10,8 +10,13 @@
 //
 //  使い方:
 //    node gen_cipher_gimmick.mjs <config.json>
-//    node gen_cipher_gimmick.mjs <config.json> --emit ink      # Ink だけ
-//    node gen_cipher_gimmick.mjs <config.json> --emit verify   # verify だけ
+//    node gen_cipher_gimmick.mjs <config.json> --emit ink          # 選択肢スロット版の Ink
+//    node gen_cipher_gimmick.mjs <config.json> --emit verify       # 選択肢スロット版の verify
+//    node gen_cipher_gimmick.mjs <config.json> --emit ink-input    # 自由入力版(#13)の Ink
+//    node gen_cipher_gimmick.mjs <config.json> --emit verify-input # 自由入力版(#13)の verify
+//
+//  「選択肢スロット型」と「自由入力型(#13)」のどちらで最終入力を受けるかは
+//  cipher_gimmick.md「§7 使い分け」を参照。同じ config からどちらでも出せる。
 //
 //  対応方式（帰納型＝既知平文攻撃ファミリ）:
 //    caesar | gronsfeld | vigenere | beaufort | keyword-substitution
@@ -24,7 +29,7 @@ import { readFileSync } from "node:fs";
 const args = process.argv.slice(2);
 const cfgPath = args.find((a) => !a.startsWith("--"));
 const emitIdx = args.indexOf("--emit");
-const emit = emitIdx >= 0 ? args[emitIdx + 1] : "all"; // all | ink | verify
+const emit = emitIdx >= 0 ? args[emitIdx + 1] : "all"; // all | ink | verify | ink-input | verify-input
 if (!cfgPath) {
   console.error("usage: node gen_cipher_gimmick.mjs <config.json> [--emit all|ink|verify]");
   process.exit(2);
@@ -53,6 +58,8 @@ const enterKnot = cfg.enterKnot || `${prefix}_enter`;
 const resolveKnot = cfg.resolveKnot || "cipher_resolve";
 const hubKnot = cfg.hubKnot || "hub";
 const crackVar = cfg.crackVar || null;
+const inputVar = cfg.inputVar || "cipher_name"; // 自由入力版(#13)で暗号名を受ける Ink 変数
+const enterLabel = cfg.enterLabel || "入力する"; // 自由入力版の継続用（隠し）選択肢ラベル
 const openLabel = cfg.openLabel || "封印を開く";
 const successText = cfg.successText || "（開封の一節をここに置く）";
 const failText = cfg.failText || "何も言わない";
@@ -246,6 +253,40 @@ function inkBlock() {
 }
 
 // ---------------------------------------------------------------------
+//  自由入力版(#13) Ink 雛形（選択肢スロットの代わりに `# input:` で受ける）
+// ---------------------------------------------------------------------
+//  規則の帰納は選択肢スロット版と同じ（既知ペアの分散配置）。異なるのは
+//  「最終の本命の受け方」だけ：候補を1つも見せず暗号名を丸ごと打たせるため、
+//  スロットのダミー総当たり（∏(ダミー+1)）すら消え総当たり耐性が最大化する。
+const isAlphaTarget = /[A-Za-z]/.test(targetCipher);
+function inkInputBlock() {
+  const L = [];
+  L.push(`// ── 自動生成: 暗号・自由入力版(#13)（方式=${method} / 平文 ${PT} / 鍵 ${target.key} → 暗号名 ${targetCipher}） ──`);
+  L.push(`// 再生成: node .../gen_cipher_gimmick.mjs <config> --emit ink-input. 手で数式は解かない。`);
+  L.push(`// 別途ファイル先頭で VAR ${inputVar} = "" を宣言すること（public_status には載せない）。`);
+  L.push(`// TODO(作者): 導入と resolve の描写を書く。解法（方式）は本文・手帳に書かない。`);
+  if (isAlphaTarget) {
+    L.push(`// 注意: 自由入力は大文字小文字を正規化しない（NFKC＋トリムのみ）。英字の暗号名は`);
+    L.push(`//   導入文で「大文字で入力」等を明示するか、比較値を入力想定の表記へ揃えること。`);
+  }
+  L.push("");
+  L.push(`=== ${enterKnot} ===`);
+  L.push(`// TODO: 端末/錠前の前に立つ導入描写（暗号名の入力を促す）`);
+  L.push(`端末が暗号名の入力を待っている。 # input: ${inputVar}`);
+  L.push(`+ [${enterLabel}] -> ${resolveKnot}`);
+  L.push("");
+  L.push(`=== ${resolveKnot} ===`);
+  L.push(`{ ${inputVar} == "${targetCipher}":`);
+  L.push(`    // TODO: 開封の描写。${successText}`);
+  if (crackVar) L.push(`    ~ ${crackVar} = true`);
+  L.push(`- else:`);
+  L.push(`    // TODO: 無音の失敗描写（再挑戦可）。端末は「${failText}」`);
+  L.push(`}`);
+  L.push(`-> ${hubKnot}`);
+  return L.join("\n");
+}
+
+// ---------------------------------------------------------------------
 //  verify アサーション
 // ---------------------------------------------------------------------
 function verifyBlock() {
@@ -268,6 +309,27 @@ function verifyBlock() {
 }
 
 // ---------------------------------------------------------------------
+//  自由入力版(#13) verify アサーション
+// ---------------------------------------------------------------------
+//  submit() は入力モードで値を送るヘルパ（GameSession.submitInput 相当）。
+//  誤入力→無音失敗、正入力→開封、の2ルートは選択肢版と同じく必ず踏む。
+function verifyInputBlock() {
+  const L = [];
+  const nearMiss = targetCipher.slice(0, -1) + (targetCipher.slice(-1) === "A" ? "B" : "A");
+  L.push(`// ── 暗号封印・自由入力版(#13) の検証（誤り→無音失敗 / 正解→開封 の2ルート）──`);
+  L.push(`// submit() は入力待ち中に値を送るヘルパ（engine の GameSession.submitInput 相当）。`);
+  L.push(`// 誤入力（末尾1文字違い ${targetCipher} → ${nearMiss}）は無音で失敗し、入力待ちへ戻る`);
+  L.push(`pick("しらべる"); pick("${enterLabel}");   // 入力モードに入る（awaitingInput=true）`);
+  L.push(`submit("${nearMiss}");`);
+  L.push(`assertText("${failText}", "誤った暗号名は無音で失敗");`);
+  L.push(`// 正しい暗号名 ${targetCipher} で開封`);
+  L.push(`pick("しらべる"); pick("${enterLabel}");`);
+  L.push(`submit("${targetCipher}");`);
+  L.push(`assertText("${successText}", "暗号を解いて開封");`);
+  return L.join("\n");
+}
+
+// ---------------------------------------------------------------------
 //  出力
 // ---------------------------------------------------------------------
 if (emit === "all") {
@@ -279,14 +341,23 @@ if (emit === "all") {
   }
   console.log(`\n## フェアネス点検（手がかりから規則が一意に帰納できるか）`);
   for (const l of fairnessReport()) console.log(`  ${l}`);
-  console.log(`\n## Ink（engine/assets/… の該当章に貼り、TODO を埋める）\n`);
+  console.log(`\n## Ink・選択肢スロット版（engine/assets/… の該当章に貼り、TODO を埋める）\n`);
   console.log(inkBlock());
-  console.log(`\n## verify（engine/scripts/verify-*.ts に貼る）\n`);
+  console.log(`\n## verify・選択肢スロット版（engine/scripts/verify-*.ts に貼る）\n`);
   console.log(verifyBlock());
+  console.log(`\n## 使い分け（選択肢スロット型 ↔ 自由入力型 #13）`);
+  console.log(`  最終入力を自由入力(#13)にすると総当たり耐性が最大化する（候補を一切見せない）。`);
+  console.log(`  英字暗号は字種正規化に注意（cipher_gimmick.md §7）。自由入力版は:`);
+  console.log(`    node .../gen_cipher_gimmick.mjs <config> --emit ink-input   # Ink`);
+  console.log(`    node .../gen_cipher_gimmick.mjs <config> --emit verify-input # verify`);
 } else if (emit === "ink") {
   console.log(inkBlock());
 } else if (emit === "verify") {
   console.log(verifyBlock());
+} else if (emit === "ink-input") {
+  console.log(inkInputBlock());
+} else if (emit === "verify-input") {
+  console.log(verifyInputBlock());
 } else {
   console.error(`unknown --emit ${emit}`);
   process.exit(2);

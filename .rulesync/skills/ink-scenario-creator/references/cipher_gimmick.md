@@ -75,12 +75,14 @@
 
 ```
 node .rulesync/skills/ink-scenario-creator/scripts/gen_cipher_gimmick.mjs <config.json>
-node .rulesync/skills/ink-scenario-creator/scripts/gen_cipher_gimmick.mjs <config.json> --emit ink
-node .rulesync/skills/ink-scenario-creator/scripts/gen_cipher_gimmick.mjs <config.json> --emit verify
+node .rulesync/skills/ink-scenario-creator/scripts/gen_cipher_gimmick.mjs <config.json> --emit ink           # 選択肢スロット版
+node .rulesync/skills/ink-scenario-creator/scripts/gen_cipher_gimmick.mjs <config.json> --emit verify        # 選択肢スロット版
+node .rulesync/skills/ink-scenario-creator/scripts/gen_cipher_gimmick.mjs <config.json> --emit ink-input     # 自由入力版(#13)
+node .rulesync/skills/ink-scenario-creator/scripts/gen_cipher_gimmick.mjs <config.json> --emit verify-input  # 自由入力版(#13)
 ```
 
-方式・鍵・平文だけ与えれば、**①既知ペア＋本命の暗号文 ②フェアネス点検 ③Ink スロット雛形 ④verify アサーション**
-を出力する。対応方式（帰納型＝既知平文攻撃ファミリ）：`caesar` / `gronsfeld` / `vigenere` / `beaufort` /
+方式・鍵・平文だけ与えれば、**①既知ペア＋本命の暗号文 ②フェアネス点検 ③Ink 雛形（選択肢スロット版／自由入力版 #13）④verify アサーション**
+を出力する。最終入力を選択肢スロット型と自由入力型のどちらで受けるかは §7 の使い分けを参照（`inputVar` / `enterLabel` は自由入力版の設定）。対応方式（帰納型＝既知平文攻撃ファミリ）：`caesar` / `gronsfeld` / `vigenere` / `beaufort` /
 `keyword-substitution`。
 
 ### config スキーマ
@@ -100,7 +102,9 @@ node .rulesync/skills/ink-scenario-creator/scripts/gen_cipher_gimmick.mjs <confi
   "knotPrefix": "pw", "okVar": "m2_pw_ok",
   "enterKnot": "cipher_enter", "resolveKnot": "cipher_resolve", "hubKnot": "ch2_hub",
   "crackVar": "m2_crack",             // 開封で立てる進行フラグ（任意）
-  "openLabel": "『総括』を開く",       // 開封メニューのラベル（verify で使う）
+  "openLabel": "『総括』を開く",       // 開封メニューのラベル（選択肢スロット版の verify で使う）
+  "inputVar": "m2_cipher_name",       // 自由入力版(#13)で暗号名を受ける Ink 変数（要 VAR 宣言・非公開）
+  "enterLabel": "入力する",           // 自由入力版の継続用（隠し）選択肢ラベル
   "successText": "オリオン計画", "failText": "何も言わない"   // verify の assert 文字列
 }
 ```
@@ -127,7 +131,45 @@ node .rulesync/skills/ink-scenario-creator/scripts/gen_cipher_gimmick.mjs <confi
 
 （machida の実装・検証は [engine/scripts/verify-machida.ts](../../../../../engine/scripts/verify-machida.ts) の第2章節が実例。）
 
-## 6. 別方式への拡張
+## 7. 選択肢スロット型 ↔ 自由入力型(#13) の使い分け
+
+暗号の**最終入力**の受け方は2通りある。規則の帰納（§1・既知平文攻撃）はどちらでも同じで、
+違うのは「本命の暗号名をどう提出させるか」だけ。同じ config からどちらでも生成できる
+（`--emit ink` / `--emit ink-input`、verify も同様）。
+
+| | 選択肢スロット型（§3・既定） | 自由入力型（#13） |
+| --- | --- | --- |
+| 入力 | 各文字を「正解＋ダミー」から選ぶ | 暗号名を丸ごと打ち込む（`# input:`） |
+| 答え空間 | ∏(ダミー数+1)＝**有限**（無音 `_ok` で per-slot 総当たりは封じる） | **列挙不能**（候補を一切見せない）＝総当たり耐性が最大 |
+| 字種 | 使える文字を提示。大文字小文字・IME の揺れが**起きない** | NFKC＋トリムのみで**大文字小文字は正規化しない**（要注意） |
+| ノンスポイラー | 文字タイルが並ぶだけ（答えを名指さない） | 候補が出ない（構造上ネタバレ不能） |
+| 向く題材 | 換字・シフト暗号の解、記号列（**固定アルファベット上の文字列**） | 数字列（暗証番号・年号・座標）、合言葉、結論の確定 |
+
+### 選び方（既定は選択肢スロット型）
+
+- **選択肢スロット型を選ぶ**: 答えが固定アルファベット上の文字列で、(a) 大文字小文字/字種の
+  揺れを持ち込みたくない、(b) 「使える文字」を見せて**規則の実行**に集中させたい、
+  (c) CLI/MCP でローマ字・記号入力の摩擦や IME を避けたい。**難易度の核が規則の帰納にある
+  英字・記号暗号はこれが既定。**
+- **自由入力型(#13) を選ぶ**: 答えが (a) **数字列**で字種の揺れが無い、(b) 候補を一切見せず
+  総当たり耐性を最大化したい、(c) 犯人名・合言葉など"結論の確定"。
+
+### 合成（規則の帰納 → 自由入力で綴る）
+
+帰納の足場（既知ペアの分散配置）はそのままに、**最終提出だけ自由入力**にすると、スロットの
+ダミー総当たり（∏）すら消えて耐性が最大化する。#13 の位置づけ（「純メニューの総当たり耐性を
+上げる拡張」）そのもの。ただし2点に注意:
+
+- **字種正規化**: 自由入力は大文字小文字を正規化しない。英字の暗号名は導入文で「大文字で
+  入力」と明示するか、**数字鍵・数字答えに寄せる**（生成器も英字ターゲットで警告を出す）。
+- **フェアネスは不変**: §2 のルーブリック（規則の一意帰納・鍵は世界に見えている・方式を
+  書かない・無音の再挑戦・2ルート検証）は入力方式に依らず**すべて満たす**。自由入力版の
+  verify（`--emit verify-input`）も「誤り→無音失敗／正解→開封」の2ルートを踏む。
+
+> 迷ったら: **英字・記号の暗号＝選択肢スロット型／数字コードや結論の確定＝自由入力型**。
+> 同義語・表記ゆれの吸収が要る自然言語リドルは（どちらの型でも）採用しない。
+
+## 8. 別方式への拡張
 
 シフト系4方式は「位置ごとのシフト量 `keyStream` × 結合則 `combine`」に分解して1つの実装で賄っている
 （`caesar`=定数／`gronsfeld`=鍵の各桁／`vigenere`=鍵文字の index／`beaufort`=`key−plain`）。
