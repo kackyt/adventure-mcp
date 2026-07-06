@@ -67,4 +67,52 @@ VAR public_status = "hp, nonexistent"
     );
     expect(engine.getPublicVariables()).toEqual({ hp: 10 });
   });
+
+  it("LIST は ', ' 区切りの文字列に正規化して返す", () => {
+    const engine = new ScenarioEngine(
+      compile(`
+LIST equipment = (rusty_sword), iron_sword, torch
+VAR public_status = "equipment"
+
+本文。
+~ equipment += torch
+-> DONE
+`),
+    );
+    while (engine.canContinue()) engine.continue();
+    expect(engine.getPublicVariables()).toEqual({ equipment: "rusty_sword, torch" });
+  });
+
+  it("空になった LIST はキーを維持して空文字列で返す", () => {
+    const engine = new ScenarioEngine(
+      compile(`
+LIST equipment = (rusty_sword)
+VAR public_status = "equipment"
+
+本文。
+~ equipment -= rusty_sword
+-> DONE
+`),
+    );
+    while (engine.canContinue()) engine.continue();
+    expect(engine.getPublicVariables()).toEqual({ equipment: "" });
+  });
+
+  it("InkList 以外の非プリミティブ値（divert target）は公開結果から除外し例外を投げない", () => {
+    const engine = new ScenarioEngine(
+      compile(`
+VAR checkpoint = -> somewhere
+VAR hp = 10
+VAR public_status = "checkpoint, hp"
+
+本文。
+-> DONE
+
+=== somewhere ===
+別の場所。
+-> DONE
+`),
+    );
+    expect(engine.getPublicVariables()).toEqual({ hp: 10 });
+  });
 });

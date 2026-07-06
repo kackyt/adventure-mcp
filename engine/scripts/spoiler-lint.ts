@@ -22,14 +22,17 @@ import { fileURLToPath } from "node:url";
 //  ②③④は章に関係なく常に検出する（正規の開示点でも作者の地の声は不可）。
 //
 //  使い方:  node scripts/spoiler-lint.ts [path ...]
-//    引数なし＝ docs/06-reference/scenarios/ 配下の *.ink を全走査。
+//    引数なし＝ docs/06-reference/scenarios/ と engine/assets/ 配下の *.ink を全走査。
 //    漏洩が1件でもあれば exit 1。
 // =====================================================================
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRoot = resolve(__dirname, "../..");
-const defaultDir = resolve(repoRoot, "docs/06-reference/scenarios");
+const defaultDirs = [
+  resolve(repoRoot, "docs/06-reference/scenarios"),
+  resolve(repoRoot, "engine/assets"),
+];
 
 interface ForbidRule {
   raw: string;
@@ -186,7 +189,7 @@ function findInkFiles(target: string): string[] {
 
 function main(): void {
   const args = process.argv.slice(2);
-  const targets = args.length > 0 ? args.map((a) => resolve(a)) : [defaultDir];
+  const targets = args.length > 0 ? args.map((a) => resolve(a)) : defaultDirs;
 
   const files = targets.flatMap(findInkFiles);
   if (files.length === 0) {

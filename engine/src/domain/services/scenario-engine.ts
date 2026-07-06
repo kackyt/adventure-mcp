@@ -1,3 +1,4 @@
+import { InkList } from "inkjs/engine/InkList";
 import { Story } from "inkjs/engine/Story";
 import { EngineError } from "../../shared/errors/engine-error.ts";
 
@@ -131,6 +132,10 @@ export class ScenarioEngine {
    * - `public_status` 未宣言（または空）の場合は空オブジェクトを返す。
    * - `public_status` 自体は結果に含めない。
    * - 列挙されていても実在しない変数名は無視する。
+   * - Ink の LIST（InkList）は `", "` 区切りの文字列に正規化する（空 LIST は `""`）。
+   *   InkList をそのまま返すと JSON 化で内部構造（origins 等）だけが出力され、
+   *   肝心のアイテム名が失われるため。
+   * - 上記以外の非プリミティブ値は公開結果から除外する（例外は投げない）。
    *
    * @returns 公開変数名をキー、現在値を値とするオブジェクト
    */
@@ -152,9 +157,19 @@ export class ScenarioEngine {
         const value = state[name];
         // Ink の VAR は非 null 初期値を持つため、実在しない変数は null/undefined になる。
         // これらは「未定義」とみなして公開対象から除外する。
-        if (value !== undefined && value !== null) {
+        if (value === undefined || value === null) {
+          continue;
+        }
+        if (value instanceof InkList) {
+          result[name] = value.toString();
+        } else if (
+          typeof value === "number" ||
+          typeof value === "string" ||
+          typeof value === "boolean"
+        ) {
           result[name] = value;
         }
+        // divert target 等その他の非プリミティブ値は JSON 化できないため公開しない
       }
       return result;
     } catch (e) {
