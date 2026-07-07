@@ -5,10 +5,14 @@ import { describe, expect, it } from "vitest";
 import { ScenarioEngine } from "../domain/services/scenario-engine.ts";
 
 // =====================================================================
-//  star_marrow_mine.ink（サバイバル・RPG worked example）のスモークプレイ。
-//  コンパイル済み JSON を inkjs で実再生し、survival_rpg_gimmicks.md §9 の
-//  検証項目（前提ゲート・勝敗フラグ・再訪・終端ED・ソフトロック無し）を機械検証する。
-//  シナリオは完全決定論（RANDOM 不使用）なので、スクリプトプレイは常に同じ結果になる。
+//  star_marrow_mine.ink v2（探索×謎解き重心のサバイバル・RPG worked example）
+//  のスモークプレイ。検証する規律:
+//   - 固定コマンドパレットでクリアに到達できる（正規ルート）
+//   - 謎の答え・解法が本文に出ない（ネタバレ非出現）
+//   - ごり押し（メニュー順の機械プレイ・刃なし連打）は資源が尽きて敗北 ED
+//   - ガード（蜘蛛・獣）と一度きりイベントのフラグ管理
+//   - 有界探索でデッドエンドが無い（選択肢ゼロ = 終端 ED のみ）
+//  シナリオは完全決定論（RANDOM 不使用）。
 // =====================================================================
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -43,60 +47,93 @@ function choose(engine: ScenarioEngine, pattern: RegExp): string {
   return playOut(engine);
 }
 
-function hasChoice(engine: ScenarioEngine, pattern: RegExp): boolean {
-  return engine.currentChoices.some((c) => pattern.test(c.text));
-}
-
 function isTerminal(engine: ScenarioEngine): boolean {
   return !engine.canContinue() && engine.currentChoices.length === 0;
 }
 
-/** 「得物を振るう」を選び続けて戦闘を終える（勝利で抜ける・敗北で終端・上限で失敗）。 */
-function fightWithWeapon(engine: ScenarioEngine): string {
-  let text = "";
-  for (let i = 0; i < 30; i++) {
-    if (!hasChoice(engine, /得物を振るう/)) {
-      return text;
-    }
-    text += choose(engine, /得物を振るう/);
-  }
-  throw new Error("戦闘が30ラウンドで終わらない（決定論が壊れている）");
+/** B1 で装備を整え、B2 の排水を解いて三ノ坑まで進む。読んだ本文を全て返す。 */
+function playToB3(engine: ScenarioEngine): string {
+  let t = "";
+  t += choose(engine, /うごく/) + choose(engine, /工具庫/);
+  t += choose(engine, /とる/) + choose(engine, /つるはし/) + choose(engine, /カンテラ/);
+  t += choose(engine, /やめる/);
+  t += choose(engine, /うごく/) + choose(engine, /広場へ/);
+  t += choose(engine, /うごく/) + choose(engine, /詰所/);
+  t += choose(engine, /とる/) + choose(engine, /薬草/);
+  t += choose(engine, /うごく/) + choose(engine, /広場へ/);
+  t += choose(engine, /うごく/) + choose(engine, /坑口の中へ/);
+  t += choose(engine, /たたく/) + choose(engine, /坑鼠/);
+  t += choose(engine, /うごく/) + choose(engine, /二ノ坑へ下る/);
+  t += choose(engine, /うごく/) + choose(engine, /堰の水路へ/);
+  // 正順: 甲(膝) → 丙(腰) → 乙(胸)
+  t += choose(engine, /たたく/) + choose(engine, /甲の堰/);
+  t += choose(engine, /たたく/) + choose(engine, /丙の堰/);
+  t += choose(engine, /たたく/) + choose(engine, /乙の堰/);
+  t += choose(engine, /うごく/) + choose(engine, /巻揚場へ/);
+  t += choose(engine, /うごく/) + choose(engine, /水の引いた坑道へ/);
+  t += choose(engine, /たたく/) + choose(engine, /大蟹/);
+  t += choose(engine, /うごく/) + choose(engine, /三ノ坑へ下る/);
+  return t;
 }
 
-/** クリアの最短筋: 大鼠→短剣→迂回路→坑夫灯→蜘蛛→鶴嘴→岩盤→護符→泉→星喰らい。 */
-function playToBossRoom(engine: ScenarioEngine, opts: { takeCharm: boolean }): void {
-  fightWithWeapon(engine); // 大鼠（素手で勝てる）
-  choose(engine, /錆びた短剣/);
-  choose(engine, /薬草を摘み取る/);
-  choose(engine, /下り梯子で地下二階へ/);
-  choose(engine, /銀の坑夫灯/);
-  choose(engine, /薬箱から薬草/);
-  choose(engine, /地下三階への坑道/);
-  choose(engine, /迂回路をゆく/);
-  fightWithWeapon(engine); // 闇綴りの蜘蛛（坑夫灯あり）
-  choose(engine, /鋼の鶴嘴/);
-  choose(engine, /岩盤を砕く/);
-  choose(engine, /裂け目を抜けて地下四階へ/);
-  if (opts.takeCharm) {
-    choose(engine, /欠月の護符/);
-  }
-  choose(engine, /泉の水を浴びる/);
-  choose(engine, /地下五階へ降りる/);
+/** B3 の降り口を開けて下ノ坑の辻まで（蜘蛛→石片A→西の壁→初遭遇をやり過ごす）。 */
+function playToB4(engine: ScenarioEngine): string {
+  let t = playToB3(engine);
+  t += choose(engine, /うごく/) + choose(engine, /東の坑道へ/);
+  t += choose(engine, /たたく/) + choose(engine, /影蜘蛛/);
+  t += choose(engine, /しらべる/) + choose(engine, /崩れた岩/) + choose(engine, /やめる/);
+  t += choose(engine, /とる/) + choose(engine, /平たい石片/);
+  t += choose(engine, /うごく/) + choose(engine, /分かれ道へ/);
+  t += choose(engine, /うごく/) + choose(engine, /西の坑道へ/);
+  t += choose(engine, /たたく/) + choose(engine, /行き止まりの壁/);
+  t += choose(engine, /うごく/) + choose(engine, /下ノ坑へ降りる/);
+  t += choose(engine, /うごく（物陰へ退く）/);
+  return t;
 }
 
-describe("star_marrow_mine スモークプレイ", () => {
-  it("クリアに到達できる（前提装備ありでは勝てる）", () => {
+/** （必要なら）炉で刃を鍛え、泉で全快して地底湖まで進む。 */
+function playToLake(engine: ScenarioEngine, opts: { forgeBlade: boolean }): string {
+  let t = playToB4(engine);
+  if (opts.forgeBlade) {
+    t += choose(engine, /うごく/) + choose(engine, /祠の間へ/);
+    t += choose(engine, /とる/) + choose(engine, /台座の石片/);
+    t += choose(engine, /うごく/) + choose(engine, /辻へ/);
+    t += choose(engine, /うごく/) + choose(engine, /旧作業場へ/);
+    t += choose(engine, /たたく/) + choose(engine, /壁/);
+    t += choose(engine, /うごく/) + choose(engine, /炉の間へ/);
+    t += choose(engine, /つかう/) + choose(engine, /つるはし（火床に）/);
+    t += choose(engine, /うごく/) + choose(engine, /旧作業場へ/);
+    t += choose(engine, /うごく/) + choose(engine, /辻へ/);
+  }
+  t += choose(engine, /うごく/) + choose(engine, /さらに下る/);
+  t += choose(engine, /たたく/) + choose(engine, /甲殻の獣/);
+  t += choose(engine, /うごく/) + choose(engine, /脇道の奥へ/);
+  t += choose(engine, /つかう/) + choose(engine, /泉の水/);
+  t += choose(engine, /うごく/) + choose(engine, /崩落回廊へ/);
+  t += choose(engine, /うごく/) + choose(engine, /水の吸い込まれる隙間を抜ける/);
+  return t;
+}
+
+describe("star_marrow_mine v2 スモークプレイ", () => {
+  it("正規ルートでクリアに到達できる（探索→謎→鍛刀→排水→決着）", () => {
     const engine = newGame();
-    playToBossRoom(engine, { takeCharm: true });
-    choose(engine, /星喰らいに挑む/);
-    fightWithWeapon(engine);
+    playToLake(engine, { forgeBlade: true });
+    choose(engine, /たたく/);
+    choose(engine, /大水門/);
+    choose(engine, /たたく/);
+    choose(engine, /^あれ$/); // 一撃目（手傷）
+    choose(engine, /たたく/);
+    choose(engine, /^あれ$/); // 二撃目（決着）
     expect(engine.getVariable("boss_beaten")).toBe(true);
-    const endingText = choose(engine, /星髄を穿ち取る/);
+    choose(engine, /うごく/);
+    choose(engine, /骸のもとへ/);
+    choose(engine, /とる/);
+    const endingText = choose(engine, /星髄/);
     expect(endingText).toContain("村への道を歩き出した");
     expect(isTerminal(engine)).toBe(true);
   });
 
-  it("public_status は公開ステータスのみ（勝敗フラグ・public_status 自体は出ない）", () => {
+  it("public_status は公開ステータスのみ・LIST は ', ' 区切りに正規化", () => {
     const engine = newGame();
     const status = engine.getPublicVariables();
     expect(Object.keys(status).sort()).toEqual([
@@ -107,78 +144,140 @@ describe("star_marrow_mine スモークプレイ", () => {
       "player_hp",
     ]);
     expect(status.player_hp).toBe(20);
-    // LIST は文字列に正規化される（開始時は装備なし＝空文字列）
     expect(status.equipment).toBe("");
-    expect(status.conditions).toBe("");
+    // 装備を取ると LIST が文字列で公開される
+    choose(engine, /うごく/);
+    choose(engine, /工具庫/);
+    choose(engine, /とる/);
+    choose(engine, /つるはし/);
+    choose(engine, /カンテラ/);
+    expect(engine.getPublicVariables().equipment).toBe("pickaxe, lantern");
   });
 
-  it("装備 LIST が ', ' 区切り文字列として公開される", () => {
+  it("ネタバレ非出現: 解く前に手がかりを読み尽くしても答え・解法が本文に出ない", () => {
     const engine = newGame();
-    fightWithWeapon(engine);
-    choose(engine, /錆びた短剣/);
-    expect(engine.getPublicVariables().equipment).toBe("rusty_dagger");
-    choose(engine, /下り梯子で地下二階へ/);
-    choose(engine, /銀の坑夫灯/);
-    expect(engine.getPublicVariables().equipment).toBe("rusty_dagger, miners_lamp");
+    let seen = "";
+    seen += choose(engine, /うごく/) + choose(engine, /工具庫/);
+    seen += choose(engine, /とる/) + choose(engine, /つるはし/) + choose(engine, /カンテラ/);
+    seen += choose(engine, /やめる/);
+    seen += choose(engine, /うごく/) + choose(engine, /広場へ/);
+    seen += choose(engine, /はなす/) + choose(engine, /下ノ坑のこと/) + choose(engine, /やめる/);
+    seen += choose(engine, /うごく/) + choose(engine, /詰所/);
+    seen += choose(engine, /しらべる/) + choose(engine, /坑内図/) + choose(engine, /やめる/);
+    seen += choose(engine, /うごく/) + choose(engine, /広場へ/);
+    seen += choose(engine, /うごく/) + choose(engine, /坑口の中へ/);
+    seen += choose(engine, /たたく/) + choose(engine, /坑鼠/);
+    seen += choose(engine, /うごく/) + choose(engine, /二ノ坑へ下る/);
+    seen += choose(engine, /しらべる/) + choose(engine, /帳面/) + choose(engine, /やめる/);
+    seen += choose(engine, /うごく/) + choose(engine, /堰の水路へ/);
+    seen += choose(engine, /しらべる/) + choose(engine, /甲の堰/) + choose(engine, /乙の堰/);
+    seen += choose(engine, /丙の堰/) + choose(engine, /やめる/);
+    for (const spoiler of [
+      "低い堰から",
+      "低い方から",
+      "甲から",
+      "順に開け",
+      "壁の先に坑道",
+      "埋め戻され",
+      "石片を重ね",
+      "組み合わせると",
+      "刃でなければ",
+      "星髄の刃が要る",
+    ]) {
+      expect(seen).not.toContain(spoiler);
+    }
   });
 
-  it("前提ゲート: 坑夫灯なしでは蜘蛛に勝てず、敗北は終端ED", () => {
+  it("ごり押し敗北: 堰をメニュー順に叩き続ける機械プレイは逆流で力尽きる", () => {
     const engine = newGame();
-    fightWithWeapon(engine); // 大鼠
-    choose(engine, /錆びた短剣/);
-    choose(engine, /下り梯子で地下二階へ/);
-    // 坑夫灯を取らずに降りる
-    choose(engine, /地下三階への坑道/);
-    const crossText = choose(engine, /崩れた坑道を駆け抜ける/);
-    expect(crossText).toContain("落石");
-    const fightText = fightWithWeapon(engine); // 蜘蛛: 与ダメ0のまま敗北するはず
-    expect(fightText).toContain("手応えがまるでない");
-    expect(engine.getVariable("spider_beaten")).toBe(false);
-    expect(engine.getVariable("last_battle_won")).toBe(false);
-    expect(fightText).toContain("二度と起き上がらなかった");
-    expect(isTerminal(engine)).toBe(true);
+    choose(engine, /うごく/);
+    choose(engine, /工具庫/);
+    choose(engine, /とる/);
+    choose(engine, /つるはし/);
+    choose(engine, /カンテラ/);
+    choose(engine, /やめる/);
+    choose(engine, /うごく/);
+    choose(engine, /広場へ/);
+    choose(engine, /うごく/);
+    choose(engine, /坑口の中へ/);
+    choose(engine, /たたく/);
+    choose(engine, /坑鼠/);
+    choose(engine, /うごく/);
+    choose(engine, /二ノ坑へ下る/);
+    choose(engine, /うごく/);
+    choose(engine, /堰の水路へ/);
+    // 観察せず、メニュー先頭の堰を叩き続ける
+    let defeated = false;
+    for (let i = 0; i < 40; i++) {
+      if (isTerminal(engine)) {
+        defeated = true;
+        break;
+      }
+      choose(engine, /たたく/);
+      const first = engine.currentChoices[0];
+      engine.chooseChoiceIndex(first.index);
+      playOut(engine);
+    }
+    expect(defeated).toBe(true);
+    expect(engine.getVariable("drained")).toBe(false);
   });
 
-  it("前提ゲート: 護符なしでは星喰らいに勝てず、資源が尽きても敗北EDに到達できる（ソフトロック無し）", () => {
+  it("前提ゲート: 刃を鍛えずにボスへ挑むと勝てず、薬草が尽きても敗北EDに到達する", () => {
     const engine = newGame();
-    playToBossRoom(engine, { takeCharm: false });
-    choose(engine, /星喰らいに挑む/);
-    // 最悪プレイ: 薬草を使い果たしてから殴り続ける → 与ダメ0なので必ず敗北EDへ
+    playToLake(engine, { forgeBlade: false });
+    choose(engine, /たたく/);
+    choose(engine, /大水門/);
     let text = "";
     for (let i = 0; i < 60; i++) {
       if (isTerminal(engine)) break;
-      if (hasChoice(engine, /薬草を噛む/)) {
-        text += choose(engine, /薬草を噛む/);
-      } else if (hasChoice(engine, /得物を振るう/)) {
-        text += choose(engine, /得物を振るう/);
+      const hp = engine.getVariable("player_hp") as number;
+      const herbs = engine.getVariable("herb_count") as number;
+      if (hp <= 6 && herbs > 0 && engine.currentChoices.some((c) => /つかう/.test(c.text))) {
+        text += choose(engine, /つかう/) + choose(engine, /薬草/);
+      } else if (engine.currentChoices.some((c) => /たたく/.test(c.text))) {
+        text += choose(engine, /たたく/) + choose(engine, /^あれ$/);
       } else {
         throw new Error("戦闘中に選択肢が尽きた（デッドエンド）");
       }
     }
     expect(engine.getVariable("boss_beaten")).toBe(false);
-    expect(text).toContain("二度と起き上がらなかった");
+    expect(engine.getVariable("boss_wounded")).toBe(false);
     expect(isTerminal(engine)).toBe(true);
+    expect(text).toContain("手応えが、まるでない");
   });
 
-  it("逃走は撃破扱いにならない（勝敗フラグの取り違えなし）", () => {
+  it("ガード: 影蜘蛛を倒すまで石片Aに近づけない", () => {
     const engine = newGame();
-    const text = choose(engine, /退いて間合いを離れる/);
-    expect(text).toContain("徘徊");
-    expect(engine.getVariable("rat_beaten")).toBe(false);
-    // 撃破していないので先へは進めず、再戦の選択肢が出る
-    expect(hasChoice(engine, /下り梯子で地下二階へ/)).toBe(false);
-    expect(hasChoice(engine, /大鼠に立ち向かう/)).toBe(true);
+    playToB3(engine);
+    choose(engine, /うごく/);
+    choose(engine, /東の坑道へ/);
+    const blocked = choose(engine, /しらべる/) + choose(engine, /崩れた岩/);
+    expect(blocked).toContain("これ以上は寄れない");
+    expect(blocked).not.toContain("平たい石片");
+    choose(engine, /やめる/);
+    expect(engine.currentChoices.some((c) => /とる/.test(c.text))).toBe(false);
   });
 
-  it("一度きり戦闘は再訪で再発しない（真偽フラグ管理）", () => {
+  it("一度きり戦闘は再訪で再発しない", () => {
     const engine = newGame();
-    fightWithWeapon(engine); // 大鼠を撃破
+    choose(engine, /うごく/);
+    choose(engine, /工具庫/);
+    choose(engine, /とる/);
+    choose(engine, /つるはし/);
+    choose(engine, /やめる/);
+    choose(engine, /うごく/);
+    choose(engine, /広場へ/);
+    choose(engine, /うごく/);
+    choose(engine, /坑口の中へ/);
+    choose(engine, /たたく/);
+    choose(engine, /坑鼠/);
     expect(engine.getVariable("rat_beaten")).toBe(true);
-    choose(engine, /下り梯子で地下二階へ/);
-    const revisitText = choose(engine, /上り梯子で地下一階へ/);
-    expect(revisitText).not.toContain("躍りかかってきた");
-    expect(hasChoice(engine, /大鼠に立ち向かう/)).toBe(false);
-    expect(hasChoice(engine, /下り梯子で地下二階へ/)).toBe(true);
+    choose(engine, /うごく/);
+    choose(engine, /広場へ/);
+    choose(engine, /うごく/);
+    choose(engine, /坑口の中へ/);
+    choose(engine, /たたく/);
+    expect(engine.currentChoices.some((c) => /坑鼠/.test(c.text))).toBe(false);
   });
 
   it("有界探索でデッドエンドが無い（全状態で選択肢あり or 終端ED）", () => {
@@ -189,7 +288,7 @@ describe("star_marrow_mine スモークプレイ", () => {
     playOut(engine);
     queue.push(engine.getState());
 
-    const LIMIT = 400;
+    const LIMIT = 600;
     while (queue.length > 0 && visited.size < LIMIT) {
       const state = queue.pop() as string;
       if (visited.has(state)) continue;
@@ -198,7 +297,7 @@ describe("star_marrow_mine スモークプレイ", () => {
       engine.loadState(state);
       const choices = engine.currentChoices;
       if (choices.length === 0) {
-        // 終端ED であること（本文が残ったまま選択肢ゼロで宙吊りにならない）
+        // 終端 ED であること（本文が残ったまま宙吊りにならない）
         expect(engine.canContinue()).toBe(false);
         continue;
       }
@@ -210,6 +309,6 @@ describe("star_marrow_mine スモークプレイ", () => {
         if (!visited.has(next)) queue.push(next);
       }
     }
-    expect(visited.size).toBeGreaterThan(50);
+    expect(visited.size).toBeGreaterThan(100);
   });
 });
