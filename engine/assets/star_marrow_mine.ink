@@ -14,7 +14,8 @@
 //   B2 ①排水: 三つの堰の敷居の高さを観察し、水の行き先が開くよう低い方から切る
 //   B3 ③降り口: 剥がされた軌道の犬釘穴が行き止まりの壁の先へ続く矛盾
 //   B4 ②見立て: 石片二枚を頭の中で重ねると一枚の絵になり、無印の壁を指す
-//   B6 ボス: 湖の大水門で水を抜き（①の再演）、星髄の刃で決着（B4 の成果）
+//   B6 ボス: 捨て水路（水の行き先）を先に開けてから大水門を叩く=①の二段再演。
+//            誤順は行き場のない水の逆流ダメージ。決着は星髄の刃（B4 の成果）
 // =====================================================================
 
 VAR player_hp = 20
@@ -50,6 +51,7 @@ VAR pit_herb_taken = false
 // B5-B6
 VAR guard_beaten = false
 VAR spring_used = false
+VAR spillway_open = false
 VAR lake_drained = false
 VAR boss_wounded = false
 VAR boss_beaten = false
@@ -673,12 +675,17 @@ VAR boss_beaten = false
 + [やめる] -> r_east3
 
 === fight_spider ===
-{ carries(pickaxe):
-    糸を払い、飛びかかる影蜘蛛へつるはしを叩き込む。二撃目で胴が裂け、蜘蛛は斜面を転げ落ちて動かなくなった。肩に、牙の痛みが残った。
-    ~ take_hit(4)
+{ carries(star_blade):
+    仄白い刃が、糸ごと影蜘蛛を薙ぎ払った。ひと振りで胴が裂け、蜘蛛は斜面を転げ落ちる。飛び散った糸が腕を擦った。
+    ~ take_hit(2)
 - else:
-    素手で払った腕に牙が食い込む。長い揉み合いの末に石で叩き潰したが、体じゅうが傷だらけだ。
-    ~ take_hit(8)
+    { carries(pickaxe):
+        糸を払い、飛びかかる影蜘蛛へつるはしを叩き込む。二撃目で胴が裂け、蜘蛛は斜面を転げ落ちて動かなくなった。肩に、牙の痛みが残った。
+        ~ take_hit(4)
+    - else:
+        素手で払った腕に牙が食い込む。長い揉み合いの末に石で叩き潰したが、体じゅうが傷だらけだ。
+        ~ take_hit(8)
+    }
 }
 ~ spider_beaten = true
 { player_hp <= 0: -> game_over }
@@ -895,6 +902,7 @@ VAR boss_beaten = false
 
 === r_shrine ===
 祠の間。岩を穿った小さな祠に、摩耗した山ノ神の像が据えられている。
+壁には深い亀裂が走り、天井の岩は罅で網の目に浮いて、いまにも剥がれ落ちそうだ。
 像の前の台座に、干からびた供え物の椀と、平たい石片がひとつ載っていた。
 + [しらべる] -> shrine_look
 + {not carries(shard_b)} [とる] -> shrine_take
@@ -1228,6 +1236,7 @@ VAR boss_beaten = false
 { not lake_drained:
     湖の中ほどで、仄白い光の筋が水越しにゆっくりと明滅している。あれだ。水の底で、眠るように蟠っている。
     湖の際には石の縁が組まれ、対岸寄りに大きな水門がひとつ。堰と同じ、太い楔で締めてあった。
+    岸に沿っては乾いた捨て水路が下りの裂け目まで続き、その口元を小さな門が締めている。
 - else:
     水の引いた湖底の泥の上に、あれが横たわっている。岩のような巨体の背で、星髄の筋が忙しなく明滅していた。
 }
@@ -1241,6 +1250,7 @@ VAR boss_beaten = false
 何をしらべる？
 + {not lake_drained} [地底湖] -> look_lake
 + {not lake_drained} [大水門] -> look_sluice
++ {not lake_drained} [捨て水路の門] -> look_spillway
 + {lake_drained && not boss_beaten} [あれ] -> look_boss
 + [やめる] -> r_lake
 
@@ -1251,6 +1261,15 @@ VAR boss_beaten = false
 
 === look_sluice ===
 湖の水位を保つための水門らしい。楔は太いが、打ち方は堰と同じだ。
+門のこちら側に、水の逃げ場はない。足元の岸辺は、湖面とほとんど同じ高さだ。
+-> lake_look
+
+=== look_spillway ===
+{ spillway_open:
+    開いた門の底を、湖の水が細い糸になって走り、裂け目へ落ちていく。
+- else:
+    乾いた水路が、岸に沿って下りの裂け目まで続いている。敷居は湖面より低い。口元の門は小さく、楔もひとまわり細い。
+}
 -> lake_look
 
 === look_boss ===
@@ -1260,6 +1279,7 @@ VAR boss_beaten = false
 
 === lake_hit ===
 何をたたく？
++ {not lake_drained && not spillway_open} [捨て水路の門] -> open_spillway
 + {not lake_drained} [大水門] -> break_sluice
 + {not lake_drained} [あれ（水の中の）] -> hit_boss_in_water
 + {lake_drained && not boss_beaten} [あれ] -> fight_boss
@@ -1269,10 +1289,24 @@ VAR boss_beaten = false
 岸から得物を振っても、水を叩くだけだ。巨体は水の底で、身じろぎひとつしない。
 -> r_lake
 
+=== open_spillway ===
+~ spillway_open = true
+細い楔は、ひと打ちで飛んだ。小さな門が開き、湖の水が細い糸になって乾いた水路を走り、裂け目へ落ちていく。
+この細さでは、湖は痩せもしない。だが——水の行き先は、これでできた。
+-> r_lake
+
 === break_sluice ===
-~ lake_drained = true
-楔へ、渾身の一撃。水門が軋みを上げて開き、黒い水が轟音とともに下の裂け目へ抜けはじめた。
-みるみる水位が下がっていく。やがて泥の湖底があらわれ——あれが、水を失って横たわっていた。
+{ spillway_open:
+    ~ lake_drained = true
+    楔へ、渾身の一撃。水門が軋みを上げて開き、黒い水が轟音とともに捨て水路へ雪崩れ込み、裂け目へ抜けていく。
+    みるみる水位が下がっていく。やがて泥の湖底があらわれ——あれが、水を失って横たわっていた。
+- else:
+    楔へ、渾身の一撃。門が軋んで開きかけ——行き場のない水が、真っ先にこちらの岸へ噴き返した。
+    水の壁に薙ぎ倒され、石の縁へ叩きつけられる。
+    ~ take_hit(4)
+    { player_hp <= 0: -> game_over }
+    水圧が、開きかけた門を元の座へ押し戻していった（体力 {player_hp}）。
+}
 -> r_lake
 
 === fight_boss ===

@@ -118,6 +118,9 @@ describe("star_marrow_mine v2 スモークプレイ", () => {
   it("正規ルートでクリアに到達できる（探索→謎→鍛刀→排水→決着）", () => {
     const engine = newGame();
     playToLake(engine, { forgeBlade: true });
+    // ①の二段再演: 水の行き先（捨て水路）を先に開けてから大水門
+    choose(engine, /たたく/);
+    choose(engine, /捨て水路の門/);
     choose(engine, /たたく/);
     choose(engine, /大水門/);
     choose(engine, /たたく/);
@@ -222,9 +225,27 @@ describe("star_marrow_mine v2 スモークプレイ", () => {
     expect(engine.getVariable("drained")).toBe(false);
   });
 
+  it("B6 誤順: 行き先を作らず大水門を叩くと逆流し、排水されない（①の再演が効いている）", () => {
+    const engine = newGame();
+    playToLake(engine, { forgeBlade: true });
+    const hpBefore = engine.getVariable("player_hp") as number;
+    const surge = choose(engine, /たたく/) + choose(engine, /大水門/);
+    expect(surge).toContain("噴き返した");
+    expect(engine.getVariable("lake_drained")).toBe(false);
+    expect(engine.getVariable("player_hp")).toBe(hpBefore - 4);
+    // 行き先を開ければ通る
+    choose(engine, /たたく/);
+    choose(engine, /捨て水路の門/);
+    const drained = choose(engine, /たたく/) + choose(engine, /大水門/);
+    expect(drained).toContain("泥の湖底");
+    expect(engine.getVariable("lake_drained")).toBe(true);
+  });
+
   it("前提ゲート: 刃を鍛えずにボスへ挑むと勝てず、薬草が尽きても敗北EDに到達する", () => {
     const engine = newGame();
     playToLake(engine, { forgeBlade: false });
+    choose(engine, /たたく/);
+    choose(engine, /捨て水路の門/);
     choose(engine, /たたく/);
     choose(engine, /大水門/);
     let text = "";
