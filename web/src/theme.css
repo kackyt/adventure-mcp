@@ -1,0 +1,20 @@
+/*
+ * ページ背景に淡い色を敷く。カードや Paper は Mantine の `--mantine-color-body`
+ * （既定の白／濃灰）を参照し続けるため、body の背景色だけを直接上書きすることで
+ * 「淡く色づいた地 + くっきりしたカード面」のコントラストを作る。
+ */
+
+:root[data-mantine-color-scheme="light"] body {
+  /* 温かみのある生成り（紙）色。真っ白よりやわらかく、文字は黒のまま読める */
+  background-color: #f3f1ea;
+}
+
+:root[data-mantine-color-scheme="dark"] body {
+  /* 純黒を避けた、わずかに青みのある落ち着いた炭色 */
+  background-color: #17181d;
+}
+
+body {
+  /* 内容が少なくても背景色が画面全体を覆うようにする */
+  min-height: 100vh;
+}

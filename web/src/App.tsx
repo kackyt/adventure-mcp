@@ -1,5 +1,6 @@
-import { Alert, Container, Stack, Text, Title } from "@mantine/core";
+import { Alert, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { useStore } from "zustand";
+import { ColorSchemeToggle } from "./components/ColorSchemeToggle.tsx";
 import { PlayScreen } from "./components/PlayScreen.tsx";
 import { ScenarioList } from "./components/ScenarioList.tsx";
 import { gameStore } from "./store/game-store-instance.ts";
@@ -11,6 +12,9 @@ export function App() {
   return (
     <Container size="md" py="xl">
       <Stack gap="lg">
+        <Group justify="flex-end">
+          <ColorSchemeToggle />
+        </Group>
         {phase === "list" && (
           <Stack gap={4}>
             <Title order={1}>Ink Adventure Player</Title>
