@@ -148,7 +148,7 @@ VAR boss_beaten = false
 何をしらべる？
 + [トロッコ] -> look_minecart
 + [レール] -> look_rails_b1
-+ [年よりの坑夫] -> look_ghost
++ [坑夫のゆうれい] -> look_ghost
 + [やめる] -> r_plaza
 
 === look_minecart ===
