@@ -7,6 +7,7 @@ import {
   Group,
   Modal,
   Paper,
+  ScrollArea,
   Stack,
   Text,
   Textarea,
@@ -76,8 +77,12 @@ export function PlayScreen() {
         </Group>
       )}
 
+      {/* 本文はウィンドウ相対の固定高にし、はみ出た分はスクロールさせる。
+          こうすると本文量に関わらず選択肢が同じ位置に留まり、ターンごとに動かない。 */}
       <Paper withBorder p="lg">
-        <Text style={{ whiteSpace: "pre-wrap" }}>{snapshot.scene}</Text>
+        <ScrollArea h="42vh" type="auto" offsetScrollbars>
+          <Text style={{ whiteSpace: "pre-wrap" }}>{snapshot.scene}</Text>
+        </ScrollArea>
       </Paper>
 
       {snapshot.ended ? (
