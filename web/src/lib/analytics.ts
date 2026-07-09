@@ -6,9 +6,19 @@ declare global {
 }
 
 /**
+ * URL クエリで DebugView 計測が要求されているか（`?debug_mode=1` または `?debug_mode=true`）。
+ * gtag.js は URL の debug_mode を自動では読まないため、この判定結果を config に渡して
+ * ブラウザ拡張なしで GA4 の DebugView に流せるようにする。
+ */
+export function isDebugRequested(search: string): boolean {
+  const value = new URLSearchParams(search).get("debug_mode");
+  return value === "1" || value === "true";
+}
+
+/**
  * Google Analytics (gtag.js) を初期化する。計測 ID 未設定なら何もしない。
  * gtag.js は `arguments` オブジェクトが push されることを前提とするため、公式スニペットと
- * 同じ形で実装する。
+ * 同じ形で実装する。`?debug_mode=1` 付きでアクセスされた場合は DebugView 対象にする。
  */
 export function initAnalytics(measurementId: string | undefined): void {
   if (!measurementId) return;
@@ -25,7 +35,9 @@ export function initAnalytics(measurementId: string | undefined): void {
   }
   window.gtag = gtag as (...args: unknown[]) => void;
   window.gtag("js", new Date());
-  window.gtag("config", measurementId);
+  // debug_mode を config に渡すと、以降 gtag('event', ...) で送る全イベントが DebugView に載る
+  const config = isDebugRequested(window.location.search) ? { debug_mode: true } : {};
+  window.gtag("config", measurementId, config);
 }
 
 /** GA イベントに添えるパラメータ（GA4 が受け付けるスカラのみ）。 */

@@ -147,9 +147,10 @@ VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 
 送出しただけではレポートの軸（ディメンション／指標）に出ません。以下を一度だけ設定します。
 
-1. **即時確認（DebugView）**: ブラウザ拡張「Google Analytics Debugger」を有効にするか、
-   `?debug_mode=1` を付けてアクセスすると、GA4 管理画面の **管理 → DebugView** に
-   イベントがリアルタイムで流れる。まずはここで送出を確認する。
+1. **即時確認（DebugView）**: 公開 URL に `?debug_mode=1` を付けてアクセスすると、
+   GA4 管理画面の **管理 → DebugView** にイベントがリアルタイムで流れる（アプリが
+   この URL パラメータを検出して gtag の `debug_mode` を有効化する。ブラウザ拡張は不要）。
+   まずはここで送出を確認する。拡張「Google Analytics Debugger」を使っても同じ。
 2. **カスタムディメンション登録**（`scenario_id` を軸にする場合）:
    管理 → **データの表示 → カスタム定義 → カスタムディメンションを作成**。
    - ディメンション名: `scenario_id` / 範囲: **イベント** / イベントパラメータ: `scenario_id`
