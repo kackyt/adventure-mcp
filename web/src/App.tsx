@@ -17,7 +17,7 @@ export function App() {
         </Group>
         {phase === "list" && (
           <Stack gap={4}>
-            <Title order={1}>Ink Adventure Player</Title>
+            <Title order={1}>Browser Adventure Player</Title>
             <Text c="dimmed">ブラウザだけで遊べるテキストアドベンチャー</Text>
           </Stack>
         )}
