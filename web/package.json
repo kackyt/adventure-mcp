@@ -13,7 +13,8 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "test": "vitest run",
-    "sync:scenarios": "node scripts/sync-scenarios.mjs"
+    "sync:scenarios": "node scripts/sync-scenarios.mjs",
+    "deploy": "vite build && firebase deploy --only hosting"
   },
   "dependencies": {
     "@mantine/core": "^8.1.0",
@@ -28,6 +29,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.5.0",
+    "firebase-tools": "^14.6.0",
     "typescript": "catalog:",
     "vite": "^6.3.5",
     "vitest": "^3.2.0"

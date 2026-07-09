@@ -31,6 +31,7 @@ updated: "YYYY-MM-DD"
 | [review-response-policy.md](./deployment/review-response-policy.md)                       | PRレビュー対応ポリシー                            | ⭐⭐⭐⭐ -     |
 | [workflow-principles.md](./deployment/workflow-principles.md)                             | ワークフロー運用原則（3原則＋TodoWrite）          | ⭐⭐⭐⭐ -     |
 | [monitoring.md](./deployment/monitoring.md)                                               | モニタリング                                      | ⭐⭐ -         |
+| [firebase-hosting.md](./deployment/firebase-hosting.md)                                   | Web プレイの公開（Firebase Hosting & GCS 配信）   | ⭐⭐⭐⭐ -     |
 
 **本リポジトリ専用（移行設計）**: [NO_GITHUB_ACTIONS_MIGRATION_DESIGN.md](../../docs/NO_GITHUB_ACTIONS_MIGRATION_DESIGN.md)（GitHub Actions を使わない運用。ルートで `npm run quality:local`、Release Drafter **用ワークフロー**は不要でよい。Issue #377）
 
