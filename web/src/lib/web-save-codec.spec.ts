@@ -49,8 +49,23 @@ describe("web-save-codec", () => {
     expectWebSaveError(() => decodeWebSave("これはセーブデータではない"), "invalid_format");
   });
 
-  it("engine の SaveCodec 形式（ADVSAVE.v1.b64）は invalid_format として拒否する", () => {
-    expectWebSaveError(() => decodeWebSave("ADVSAVE.v1.b64\nAAAA\n.sig=xxx"), "invalid_format");
+  it("engine の SaveCodec 形式（ADVSAVE.v1.b64）の正しい形式をインポートできる", () => {
+    const envelope = sampleEnvelope();
+    const b64Body = Buffer.from(JSON.stringify(envelope), "utf-8").toString("base64");
+    const cliSaveText = `ADVSAVE.v1.b64\n${b64Body}\n.sig=dGVzdF9zaWduYXR1cmU=`;
+    expect(decodeWebSave(cliSaveText)).toEqual(envelope);
+  });
+
+  it("engine の SaveCodec 形式（ADVSAVE.v1.b64）だが署名ヘッダがない場合は invalid_format", () => {
+    expectWebSaveError(() => decodeWebSave("ADVSAVE.v1.b64\nAAAA\n.not_sig=xxx"), "invalid_format");
+  });
+
+  it("engine の SaveCodec 形式（ADVSAVE.v1.b64）だが行数が不足している場合は invalid_format", () => {
+    expectWebSaveError(() => decodeWebSave("ADVSAVE.v1.b64\nAAAA"), "invalid_format");
+  });
+
+  it("engine の SaveCodec 形式（ADVSAVE.v1.b64）だがBase64部分が壊れている場合は corrupted", () => {
+    expectWebSaveError(() => decodeWebSave("ADVSAVE.v1.b64\n%%%%\n.sig=xxx"), "corrupted");
   });
 
   it("Base64 が壊れている場合は corrupted", () => {

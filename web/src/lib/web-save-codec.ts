@@ -61,24 +61,39 @@ export function encodeWebSave(envelope: SaveEnvelope): string {
  */
 export function decodeWebSave(text: string): SaveEnvelope {
   const trimmed = text.trim();
-  if (!trimmed.startsWith(MAGIC_HEADER)) {
-    throw new WebSaveError(
-      "invalid_format",
-      "セーブデータの形式が違います。エクスポートした文字列全体を貼り付けてください。",
-    );
+  let jsonStr: string;
+
+  if (trimmed.startsWith(MAGIC_HEADER)) {
+    // Web版フォーマット
+    try {
+      jsonStr = decodeBase64Utf8(trimmed.slice(MAGIC_HEADER.length));
+    } catch {
+      throw new WebSaveError("corrupted", "セーブデータが壊れています（復号に失敗しました）。");
+    }
+  } else {
+    // CLI/MCP版フォーマット (ADVSAVE.v1.b64 \n Base64 \n .sig=signature)
+    const lines = trimmed.split(/\r?\n/);
+    if (lines.length === 3 && lines[0] === "ADVSAVE.v1.b64" && lines[2].startsWith(".sig=")) {
+      try {
+        jsonStr = decodeBase64Utf8(lines[1]);
+      } catch {
+        throw new WebSaveError("corrupted", "セーブデータが壊れています（復号に失敗しました）。");
+      }
+    } else {
+      throw new WebSaveError(
+        "invalid_format",
+        "セーブデータの形式が違います。エクスポートした文字列全体を貼り付けてください。",
+      );
+    }
   }
-  let json: string;
-  try {
-    json = decodeBase64Utf8(trimmed.slice(MAGIC_HEADER.length));
-  } catch {
-    throw new WebSaveError("corrupted", "セーブデータが壊れています（復号に失敗しました）。");
-  }
+
   let parsed: unknown;
   try {
-    parsed = JSON.parse(json);
+    parsed = JSON.parse(jsonStr);
   } catch {
     throw new WebSaveError("corrupted", "セーブデータが壊れています（JSON を解釈できません）。");
   }
+
   if (!isSaveEnvelope(parsed)) {
     throw new WebSaveError("invalid_format", "セーブデータに必要な情報が含まれていません。");
   }
