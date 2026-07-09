@@ -32,3 +32,7 @@ bin/
 
 # セーブデータディレクトリ
 save-data/
+
+# web パッケージのビルド成果物・ローカル開発用に同期したシナリオ
+web/dist/
+web/public/scenarios/
