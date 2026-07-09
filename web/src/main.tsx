@@ -1,10 +1,12 @@
+import "@mantine/core/styles.css";
+import { MantineProvider } from "@mantine/core";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { App } from "./App.tsx";
+import { initAnalytics } from "./lib/analytics.ts";
+import { gaMeasurementId } from "./lib/config.ts";
 
-// NOTE: プレイ UI 本体は Issue #25 で実装する。ここでは web パッケージの起動導線のみを用意する。
-function Placeholder() {
-  return <p>Adventure MCP Web - プレイ UI は準備中です。</p>;
-}
+initAnalytics(gaMeasurementId());
 
 const container = document.getElementById("root");
 if (!container) {
@@ -12,6 +14,8 @@ if (!container) {
 }
 createRoot(container).render(
   <StrictMode>
-    <Placeholder />
+    <MantineProvider defaultColorScheme="auto">
+      <App />
+    </MantineProvider>
   </StrictMode>,
 );
