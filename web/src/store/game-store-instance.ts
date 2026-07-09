@@ -1,3 +1,4 @@
+import { track } from "../lib/analytics.ts";
 import { scenarioBaseUrl } from "../lib/config.ts";
 import { HttpScenarioLoader } from "../lib/scenario-loader.ts";
 import { createGameStore } from "./game-store.ts";
@@ -6,4 +7,5 @@ import { createGameStore } from "./game-store.ts";
 export const gameStore = createGameStore({
   loader: new HttpScenarioLoader(scenarioBaseUrl()),
   storage: window.localStorage,
+  track,
 });

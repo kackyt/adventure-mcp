@@ -31,6 +31,11 @@ export interface GameStoreDeps {
   storage: SaveStore;
   /** セーブ日時の供給源（テスト用に差し替え可能）。 */
   now?: () => Date;
+  /**
+   * 計測イベントの送出口（既定は no-op。本番は GA の track を注入）。
+   * params は GA4 が受け付けるスカラのみ（lib/analytics の AnalyticsParams と同形）。
+   */
+  track?: (event: string, params?: Record<string, string | number | boolean | undefined>) => void;
 }
 
 export interface GameStoreState {
@@ -74,6 +79,7 @@ function errorMessage(e: unknown): string {
  */
 export function createGameStore(deps: GameStoreDeps): StoreApi<GameStoreState> {
   const now = deps.now ?? (() => new Date());
+  const track = deps.track ?? (() => {});
   let session: GameSession | null = null;
 
   return createStore<GameStoreState>()((set, get) => {
@@ -120,6 +126,19 @@ export function createGameStore(deps: GameStoreDeps): StoreApi<GameStoreState> {
       return entry?.title ?? scenarioId;
     }
 
+    /**
+     * 直前のターンで終端に到達していればクリア計測を送る。choose/submitInput 双方から使う。
+     * セーブ復元で「既に終わっている状態」を読み込んだ場合は再送しない（この経路を通らない）。
+     */
+    function reportCompletionIfEnded(scenarioId: string, snapshot: Snapshot): void {
+      if (snapshot.ended && session) {
+        track("scenario_complete", {
+          scenario_id: scenarioId,
+          turns: session.getHistory().turns.length,
+        });
+      }
+    }
+
     /** エンベロープからセッションを復元して状態へ反映する（resume/import 共通）。 */
     async function restoreFromEnvelope(envelope: SaveEnvelope): Promise<void> {
       const json = await deps.loader.fetchScenarioJson(envelope.scenarioId);
@@ -163,6 +182,7 @@ export function createGameStore(deps: GameStoreDeps): StoreApi<GameStoreState> {
         try {
           const json = await deps.loader.fetchScenarioJson(scenarioId);
           reflect(scenarioId, titleOf(scenarioId), new GameSession(new ScenarioEngine(json)));
+          track("scenario_start", { scenario_id: scenarioId });
         } catch (e) {
           set({ busy: false, error: errorMessage(e) });
         }
@@ -178,6 +198,7 @@ export function createGameStore(deps: GameStoreDeps): StoreApi<GameStoreState> {
         set({ busy: true, error: null });
         try {
           await restoreFromEnvelope(decodeWebSave(saved));
+          track("resume_autosave", { scenario_id: scenarioId });
         } catch (e) {
           set({ busy: false, error: errorMessage(e) });
         }
@@ -190,6 +211,7 @@ export function createGameStore(deps: GameStoreDeps): StoreApi<GameStoreState> {
           const snapshot = session.choose(index);
           autoSave(scenarioId, session);
           set({ snapshot, turns: session.getHistory().turns, error: null });
+          reportCompletionIfEnded(scenarioId, snapshot);
         } catch (e) {
           if (e instanceof SessionError) {
             set({ error: e.message });
@@ -206,6 +228,7 @@ export function createGameStore(deps: GameStoreDeps): StoreApi<GameStoreState> {
           const snapshot = session.submitInput(value);
           autoSave(scenarioId, session);
           set({ snapshot, turns: session.getHistory().turns, error: null });
+          reportCompletionIfEnded(scenarioId, snapshot);
         } catch (e) {
           if (e instanceof SessionError) {
             set({ error: e.message });
@@ -220,7 +243,9 @@ export function createGameStore(deps: GameStoreDeps): StoreApi<GameStoreState> {
         if (!session || scenarioId === null) {
           throw new Error("プレイ中のゲームがないため、セーブデータを書き出せません。");
         }
-        return encodeWebSave(buildEnvelope(scenarioId, session));
+        const text = encodeWebSave(buildEnvelope(scenarioId, session));
+        track("save_export", { scenario_id: scenarioId });
+        return text;
       },
 
       async importSave(text) {
@@ -228,6 +253,7 @@ export function createGameStore(deps: GameStoreDeps): StoreApi<GameStoreState> {
         set({ busy: true, error: null });
         try {
           await restoreFromEnvelope(decodeWebSave(text));
+          track("save_import", { scenario_id: get().scenarioId ?? undefined });
         } catch (e) {
           set({ busy: false, error: errorMessage(e) });
         }

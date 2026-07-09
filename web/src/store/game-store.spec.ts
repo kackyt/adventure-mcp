@@ -1,5 +1,5 @@
 import { compileInkToJson } from "engine/src/browser.ts";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   AUTOSAVE_KEY_PREFIX,
   createGameStore,
@@ -233,5 +233,81 @@ describe("game-store", () => {
     expect(store.getState().phase).toBe("list");
     expect(store.getState().snapshot).toBeNull();
     expect(storage.getItem(`${AUTOSAVE_KEY_PREFIX}cave_test`)).not.toBeNull();
+  });
+});
+
+describe("game-store の計測イベント", () => {
+  function newTrackedStore(storage: SaveStore = new MemoryStorage()) {
+    const track = vi.fn();
+    const store = createGameStore({
+      loader: fakeLoader(),
+      storage,
+      now: () => new Date("2026-07-09T00:00:00.000Z"),
+      track,
+    });
+    return { store, storage, track };
+  }
+
+  it("ゲーム開始で scenario_start を送る", async () => {
+    const { store, track } = newTrackedStore();
+    await store.getState().startGame("cave_test");
+    expect(track).toHaveBeenCalledWith("scenario_start", { scenario_id: "cave_test" });
+  });
+
+  it("開始に失敗したら scenario_start を送らない", async () => {
+    const { store, track } = newTrackedStore();
+    await store.getState().startGame("no_such_scenario");
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it("終端到達で scenario_complete をターン数付きで送る", async () => {
+    const { store, track } = newTrackedStore();
+    await store.getState().startGame("cave_test");
+    store.getState().choose(1); // 引き返す → END
+    expect(track).toHaveBeenCalledWith(
+      "scenario_complete",
+      expect.objectContaining({ scenario_id: "cave_test", turns: expect.any(Number) }),
+    );
+  });
+
+  it("終端に達しない選択では scenario_complete を送らない", async () => {
+    const { store, track } = newTrackedStore();
+    await store.getState().startGame("cave_test");
+    track.mockClear();
+    store.getState().choose(0); // 数字盤（入力待ち）へ。まだ終わらない
+    expect(track).not.toHaveBeenCalledWith("scenario_complete", expect.anything());
+  });
+
+  it("エクスポートで save_export を送る", async () => {
+    const { store, track } = newTrackedStore();
+    await store.getState().startGame("cave_test");
+    store.getState().exportSave();
+    expect(track).toHaveBeenCalledWith("save_export", { scenario_id: "cave_test" });
+  });
+
+  it("インポート成功で save_import を送る", async () => {
+    const { store } = newTrackedStore();
+    await store.getState().startGame("cave_test");
+    const saveText = store.getState().exportSave();
+
+    const { store: other, track } = newTrackedStore();
+    await other.getState().importSave(saveText);
+    expect(track).toHaveBeenCalledWith("save_import", { scenario_id: "cave_test" });
+  });
+
+  it("インポート失敗では save_import を送らない", async () => {
+    const { store, track } = newTrackedStore();
+    await store.getState().importSave("壊れたデータ");
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it("続きからの再開で resume_autosave を送る", async () => {
+    const storage = new MemoryStorage();
+    const { store: first } = newTrackedStore(storage);
+    await first.getState().startGame("cave_test");
+
+    const { store: second, track } = newTrackedStore(storage);
+    await second.getState().resumeGame("cave_test");
+    expect(track).toHaveBeenCalledWith("resume_autosave", { scenario_id: "cave_test" });
   });
 });

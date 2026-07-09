@@ -27,3 +27,15 @@ export function initAnalytics(measurementId: string | undefined): void {
   window.gtag("js", new Date());
   window.gtag("config", measurementId);
 }
+
+/** GA イベントに添えるパラメータ（GA4 が受け付けるスカラのみ）。 */
+export type AnalyticsParams = Record<string, string | number | boolean | undefined>;
+
+/**
+ * GA4 へカスタムイベントを送る。gtag 未初期化（計測 ID 未設定・テスト/SSR 環境）では
+ * 何もしない no-op。計測の有無を呼び出し側が気にせず済むよう、ここで存在チェックを閉じる。
+ */
+export function track(event: string, params?: AnalyticsParams): void {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", event, params);
+}
