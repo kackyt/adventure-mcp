@@ -15,6 +15,9 @@
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "protobufjs"]
+  },
   "dependencies": {
     "rulesync": "^8.23.0"
   },
