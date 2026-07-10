@@ -33,18 +33,18 @@ export function PlayScreen() {
     return null;
   }
 
-  const statusEntries = Object.entries(snapshot.status);
+  const statusEntries = snapshot.status ? Object.entries(snapshot.status) : [];
   // 最新ターンは現在の本文と同じものなので、履歴には過去ターン（行動済み）のみを出す
   const pastTurns = turns.filter((turn) => turn.choice !== null);
 
-  function handleSubmitInput(event: FormEvent<HTMLFormElement>) {
+  function handleSubmitInput(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     if (inputValue.trim().length === 0) return;
     gameStore.getState().submitInput(inputValue);
     setInputValue("");
   }
 
-  function openExportModal() {
+  function openExportModal(): void {
     try {
       setExportText(gameStore.getState().exportSave());
       exportModal.open();

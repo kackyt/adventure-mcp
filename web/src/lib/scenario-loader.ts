@@ -160,10 +160,21 @@ export class HttpScenarioLoader {
 
   private async fetchText(path: string): Promise<string> {
     const url = `${this.baseUrl}/${path}`;
-    let response: Response;
     try {
-      response = await this.fetchFn(url);
+      const response = await this.fetchFn(url);
+      if (!response.ok) {
+        throw new ScenarioFetchError(
+          "http_error",
+          `シナリオの取得に失敗しました（HTTP ${response.status}）: ${url}`,
+          response.status,
+        );
+      }
+      // ボディ読み込み中の通信断も network_error として拾えるよう、同じ try に含める
+      return await response.text();
     } catch (e) {
+      if (e instanceof ScenarioFetchError) {
+        throw e;
+      }
       throw new ScenarioFetchError(
         "network_error",
         `シナリオ配信サーバーへ接続できません: ${url}`,
@@ -171,13 +182,5 @@ export class HttpScenarioLoader {
         e,
       );
     }
-    if (!response.ok) {
-      throw new ScenarioFetchError(
-        "http_error",
-        `シナリオの取得に失敗しました（HTTP ${response.status}）: ${url}`,
-        response.status,
-      );
-    }
-    return await response.text();
   }
 }

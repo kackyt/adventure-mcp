@@ -45,6 +45,15 @@ describe("web-save-codec", () => {
     expect(decodeWebSave(text).scenarioId).toBe("cave_escape");
   });
 
+  it("Base64 本文の途中に改行・空白が混入してもデコードできる（コピペ耐性）", () => {
+    const encoded = encodeWebSave(sampleEnvelope());
+    const marker = "ADVSAVE.web.v1.";
+    const body = encoded.slice(marker.length);
+    // メール折り返しなどで Base64 の途中に改行・空白が入ったケースを模す
+    const wrapped = marker + body.replace(/(.{10})/g, "$1 \n");
+    expect(decodeWebSave(wrapped).scenarioId).toBe("cave_escape");
+  });
+
   it("マーカーの無い文字列は invalid_format", () => {
     expectWebSaveError(() => decodeWebSave("これはセーブデータではない"), "invalid_format");
   });

@@ -34,7 +34,8 @@ function encodeBase64Utf8(text: string): string {
 
 /** Base64 を UTF-8 文字列に戻す。 */
 function decodeBase64Utf8(base64: string): string {
-  const binary = atob(base64);
+  // コピペで紛れ込む空白・改行を除去する（atob は空白混入でエラーになるため）
+  const binary = atob(base64.replace(/\s/g, ""));
   const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 }

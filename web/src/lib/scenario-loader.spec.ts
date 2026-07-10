@@ -107,6 +107,18 @@ describe("HttpScenarioLoader", () => {
       await expectFetchError(loader.fetchIndex(), "network_error");
     });
 
+    it("ボディ読み込み（response.text()）中の失敗も network_error にラップする", async () => {
+      const fetchFn = vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        text: async () => {
+          throw new TypeError("network error while reading body");
+        },
+      })) as unknown as typeof fetch;
+      const loader = new HttpScenarioLoader(BASE_URL, fetchFn);
+      await expectFetchError(loader.fetchIndex(), "network_error");
+    });
+
     it("失敗はメモ化せず、復旧後に再試行できる", async () => {
       let failing = true;
       const fetchFn = vi.fn(async () => {
