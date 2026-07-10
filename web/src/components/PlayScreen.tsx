@@ -6,6 +6,7 @@ import {
   CopyButton,
   Group,
   Modal,
+  Pagination,
   Paper,
   ScrollArea,
   Stack,
@@ -28,6 +29,7 @@ export function PlayScreen() {
   const [inputValue, setInputValue] = useState("");
   const [exportOpened, exportModal] = useDisclosure(false);
   const [exportText, setExportText] = useState("");
+  const [historyPage, setHistoryPage] = useState(1);
 
   if (!snapshot) {
     return null;
@@ -36,6 +38,19 @@ export function PlayScreen() {
   const statusEntries = snapshot.status ? Object.entries(snapshot.status) : [];
   // 最新ターンは現在の本文と同じものなので、履歴には過去ターン（行動済み）のみを出す
   const pastTurns = turns.filter((turn) => turn.choice !== null);
+
+  // 履歴が長くなると一度に描画するのは重い・見づらいので、閾値を超えたらページ分割する。
+  const HISTORY_PAGE_SIZE = 50;
+  const historyPaginated = pastTurns.length > HISTORY_PAGE_SIZE;
+  const historyTotalPages = Math.max(1, Math.ceil(pastTurns.length / HISTORY_PAGE_SIZE));
+  // ターンは増える一方だが、リセット等で総数が減ってもページが範囲外にならないよう丸める。
+  const historyCurrentPage = Math.min(historyPage, historyTotalPages);
+  const visibleTurns = historyPaginated
+    ? pastTurns.slice(
+        (historyCurrentPage - 1) * HISTORY_PAGE_SIZE,
+        historyCurrentPage * HISTORY_PAGE_SIZE,
+      )
+    : pastTurns;
 
   function handleSubmitInput(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -94,7 +109,7 @@ export function PlayScreen() {
       ) : snapshot.awaitingInput ? (
         <form onSubmit={handleSubmitInput}>
           <Stack gap="xs">
-            <Text fw={500}>入力が求められている……</Text>
+            <Text fw={500}>テキストを入力してください</Text>
             <Group align="flex-end">
               <TextInput
                 value={inputValue}
@@ -131,7 +146,22 @@ export function PlayScreen() {
             <Accordion.Control>行動履歴（{pastTurns.length} ターン）</Accordion.Control>
             <Accordion.Panel>
               <Stack gap="md">
-                {pastTurns.map((turn) => (
+                {historyPaginated && (
+                  <Group justify="space-between" align="center">
+                    <Text size="xs" c="dimmed">
+                      {(historyCurrentPage - 1) * HISTORY_PAGE_SIZE + 1}–
+                      {(historyCurrentPage - 1) * HISTORY_PAGE_SIZE + visibleTurns.length} /{" "}
+                      {pastTurns.length} ターン
+                    </Text>
+                    <Pagination
+                      size="sm"
+                      total={historyTotalPages}
+                      value={historyCurrentPage}
+                      onChange={setHistoryPage}
+                    />
+                  </Group>
+                )}
+                {visibleTurns.map((turn) => (
                   <Paper key={turn.turn} withBorder p="sm">
                     <Text size="xs" c="dimmed">
                       ターン {turn.turn}
@@ -144,6 +174,16 @@ export function PlayScreen() {
                     </Text>
                   </Paper>
                 ))}
+                {historyPaginated && (
+                  <Group justify="center">
+                    <Pagination
+                      size="sm"
+                      total={historyTotalPages}
+                      value={historyCurrentPage}
+                      onChange={setHistoryPage}
+                    />
+                  </Group>
+                )}
               </Stack>
             </Accordion.Panel>
           </Accordion.Item>
