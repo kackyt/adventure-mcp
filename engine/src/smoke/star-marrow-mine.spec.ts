@@ -91,7 +91,7 @@ function playToB4(engine: ScenarioEngine): string {
   return t;
 }
 
-/** （必要なら）かじ場で刃をつくり、泉で全快して地底の湖まで進む。 */
+/** （必要なら）かじ場で刃をつくり、薬草を 1 本切って岩ガメを抜け、地底の湖まで進む。 */
 function playToLake(engine: ScenarioEngine, opts: { forgeBlade: boolean }): string {
   let t = playToB4(engine);
   if (opts.forgeBlade) {
@@ -106,10 +106,9 @@ function playToLake(engine: ScenarioEngine, opts: { forgeBlade: boolean }): stri
     t += choose(engine, /うごく/) + choose(engine, /分かれ道へ/);
   }
   t += choose(engine, /うごく/) + choose(engine, /さらに下りる/);
+  // 通行料の累積で HP8。岩ガメ戦の前に薬草を 1 本切る（＝配分判断が必須の設計）
+  t += choose(engine, /つかう/) + choose(engine, /薬草/);
   t += choose(engine, /たたく/) + choose(engine, /岩ガメ/);
-  t += choose(engine, /うごく/) + choose(engine, /わき道の奥へ/);
-  t += choose(engine, /つかう/) + choose(engine, /泉の水/);
-  t += choose(engine, /うごく/) + choose(engine, /崩れた通路へ/);
   t += choose(engine, /うごく/) + choose(engine, /水が流れこむすき間を抜ける/);
   return t;
 }
@@ -267,6 +266,98 @@ describe("star_marrow_mine v2 スモークプレイ", () => {
     expect(engine.getVariable("boss_wounded")).toBe(false);
     expect(isTerminal(engine)).toBe(true);
     expect(text).toContain("手ごたえが、まるでない");
+  });
+
+  it("リスク購入: よろい＝HP半減＋薬草ロック、警告は現場で読め、解毒は岩ガメの先の泉のみ", () => {
+    const engine = newGame();
+    playToB3(engine); // HP13・薬草2
+    choose(engine, /うごく/);
+    choose(engine, /南の坑道へ/);
+    // なきがらを しらべる 前は、よろいを取る選択肢が出ない（警告を必ず読める導線）
+    choose(engine, /とる/);
+    expect(engine.currentChoices.some((c) => /よろい/.test(c.text))).toBe(false);
+    choose(engine, /やめる/);
+    // 現場の警告: かみかけの薬草＝「毒に薬草が効かない」を取得前に読める。坑夫ではなく護衛
+    const hint = choose(engine, /しらべる/) + choose(engine, /たおれている人/);
+    expect(hint).toContain("かみかけの薬草");
+    expect(hint).toContain("護衛");
+    choose(engine, /やめる/);
+    // 取得＝現在HPの半減（13→7）＋毒＋よろい
+    choose(engine, /とる/);
+    choose(engine, /護衛の革のよろい/);
+    expect(engine.getVariable("player_hp")).toBe(7);
+    expect(engine.getPublicVariables().equipment as string).toContain("hide_armor");
+    expect(engine.getPublicVariables().conditions as string).toContain("poisoned");
+    // 毒中は薬草が消費もされず回復もしない
+    const blocked = choose(engine, /つかう/) + choose(engine, /薬草/);
+    expect(blocked).toContain("引かない");
+    expect(engine.getVariable("herb_count")).toBe(2);
+    expect(engine.getVariable("player_hp")).toBe(7);
+    // よろいでも予兆ダメージは 0 にならない（2-2 → 最低1）＝総当たり抑止は生きる
+    choose(engine, /たたく/);
+    choose(engine, /行き止まり/);
+    expect(engine.getVariable("player_hp")).toBe(6);
+    // 回復なしの綱渡り区間: クモ(5-2=3)→鍛冶→岩ガメ(3-2=1)
+    choose(engine, /うごく/);
+    choose(engine, /分かれ道へ/);
+    choose(engine, /うごく/);
+    choose(engine, /東の坑道へ/);
+    choose(engine, /たたく/);
+    choose(engine, /大グモ/);
+    expect(engine.getVariable("player_hp")).toBe(3);
+    choose(engine, /しらべる/);
+    choose(engine, /くずれた岩/);
+    choose(engine, /やめる/);
+    choose(engine, /とる/);
+    choose(engine, /平たいかけら/);
+    choose(engine, /うごく/);
+    choose(engine, /分かれ道へ/);
+    choose(engine, /うごく/);
+    choose(engine, /西の坑道へ/);
+    choose(engine, /たたく/);
+    choose(engine, /行き止まりのかべ/);
+    choose(engine, /うごく/);
+    choose(engine, /下の坑へ下りる/);
+    choose(engine, /うごく（物かげにかくれる）/);
+    choose(engine, /うごく/);
+    choose(engine, /ほこらへ/);
+    choose(engine, /とる/);
+    choose(engine, /台のかけら/);
+    choose(engine, /うごく/);
+    choose(engine, /分かれ道へ/);
+    choose(engine, /うごく/);
+    choose(engine, /作業場へ/);
+    choose(engine, /たたく/);
+    choose(engine, /かべ/);
+    choose(engine, /うごく/);
+    choose(engine, /かじ場へ/);
+    choose(engine, /つかう/);
+    choose(engine, /つるはし（星髄の火に）/);
+    choose(engine, /うごく/);
+    choose(engine, /作業場へ/);
+    choose(engine, /うごく/);
+    choose(engine, /分かれ道へ/);
+    choose(engine, /うごく/);
+    choose(engine, /さらに下りる/);
+    // 泉（唯一の解毒）は岩ガメの関門の先＝毒をかかえたまま素通りできない
+    expect(engine.currentChoices.length).toBeGreaterThan(0);
+    choose(engine, /うごく/);
+    expect(engine.currentChoices.some((c) => /わき道/.test(c.text))).toBe(false);
+    choose(engine, /やめる/);
+    choose(engine, /たたく/);
+    choose(engine, /岩ガメ/);
+    expect(engine.getVariable("player_hp")).toBe(2);
+    // 泉は解毒だけで回復はしない → 解毒後にはじめて薬草が効く
+    choose(engine, /うごく/);
+    choose(engine, /わき道の奥へ/);
+    choose(engine, /つかう/);
+    choose(engine, /泉の水/);
+    expect(engine.getVariable("player_hp")).toBe(2);
+    expect(engine.getPublicVariables().conditions as string).not.toContain("poisoned");
+    choose(engine, /つかう/);
+    choose(engine, /薬草/);
+    expect(engine.getVariable("player_hp")).toBe(8);
+    expect(engine.getVariable("herb_count")).toBe(1);
   });
 
   it("ガード: 大グモを倒すまでかけらAに近づけない", () => {

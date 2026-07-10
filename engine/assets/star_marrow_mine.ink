@@ -11,6 +11,16 @@
 //   - 大目的は開幕で明示（星髄をひとかけら、生きて帰る）。中間目標は世界から読み取る
 //   - 総当たり抑止 = 誤打・誤順の HP コスト（すべて予兆つき・決定論）
 //   - 詰みは事前示唆ある選択の結果のみ。HP0 は必ず終端の敗北 ED
+//  回復リソース設計（緊張の核）:
+//   - 戦闘は本物の通行料: 正解装備・ノーミスでも累積 23 > 初期HP20
+//     （ねずみ3・カニ4・クモ5・岩ガメ3・ボス5+3）＝薬草を挟まずにはクリア不能
+//   - 薬草: 生命線(+6・計3本)。供給はわざと前積み＝どこで切るかの配分判断が全員に発生
+//   - 泉(B5): 解毒専用。回復はしない＝薬草の価値を食わない。岩ガメの関門の先にある
+//   - 革のよろい(B3 南・毒の霧): リスク購入。被ダメ-2 の保険（ただし最低 1 は通る＝
+//     総当たり抑止の HP コスト経済は常に生きる）。支払い＝現在HPの半減＋解毒まで薬草ロック。
+//     半減は現在HP基準なので買うタイミング自体が賭けになる
+//   - フェアネス: 「毒に薬草が効かない」は取得前に現場で読める
+//     （なきがらの周りに、かみかけの薬草が散らばっている）
 //  進行の背骨（謎）:
 //   B2 ①排水: 三つの水門の底の高さを観察し、水の行き先が開くよう低い方から開ける
 //   B3 ③降り口: はがされたレールの釘あとが、行き止まりの壁の下までつづく矛盾
@@ -22,7 +32,7 @@
 VAR player_hp = 20
 VAR herb_count = 1
 VAR depth = 1
-LIST equipment = pickaxe, lantern, star_blade, shard_a, shard_b
+LIST equipment = pickaxe, lantern, star_blade, shard_a, shard_b, hide_armor
 LIST conditions = poisoned
 VAR public_status = "player_hp, herb_count, equipment, conditions, depth"
 
@@ -31,8 +41,6 @@ VAR ghost_met = false
 VAR rat_beaten = false
 VAR crab_beaten = false
 VAR aid_taken = false
-VAR mud_herb_seen = false
-VAR mud_herb_taken = false
 // B2 水門（正しい順の進み具合。まちがえると backflow で全部もどる）
 VAR gate_a = false
 VAR gate_b = false
@@ -42,16 +50,15 @@ VAR drained = false
 // B3
 VAR spider_beaten = false
 VAR south_herb_taken = false
+VAR corpse_seen = false
 VAR rubble_shard_seen = false
 VAR wall_opened = false
 // B4
 VAR met_the_thing = false
 VAR forge_found = false
 VAR blade_forged = false
-VAR pit_herb_taken = false
 // B5-B6
 VAR guard_beaten = false
-VAR spring_used = false
 VAR spillway_open = false
 VAR lake_drained = false
 VAR boss_wounded = false
@@ -71,18 +78,22 @@ VAR boss_beaten = false
 }
 
 === function take_hit(dmg) ===
-{ conditions ? poisoned:
-    ~ player_hp = player_hp - dmg - 1
-- else:
-    ~ player_hp = player_hp - dmg
+// 革のよろいは被ダメを 2 やわらげる。ただし、しんまでは守れない＝最低 1 は通る
+~ temp actual = dmg
+{ carries(hide_armor):
+    ~ actual = dmg - 2
+    { actual < 1:
+        ~ actual = 1
+    }
 }
+~ player_hp = player_hp - actual
 
 // ---------------- 共有: もちもの / つかう ----------------
 
 === show_bag(-> ret) ===
 体力は {player_hp}／20。薬草が {herb_count} たば。
-持ち物——{carries(pickaxe):つるはし。}{carries(lantern):ランプ。}{carries(star_blade):星髄の刃。}{carries(shard_a):もようのかけら。}{carries(shard_b):かけらの片われ。}{LIST_COUNT(equipment) == 0:めぼしい物は何もない。}
-{conditions ? poisoned:毒にやられている。きずのいたみが、いつもより重い。}
+持ち物——{carries(pickaxe):つるはし。}{carries(lantern):ランプ。}{carries(star_blade):星髄の刃。}{carries(hide_armor):革のよろい。}{carries(shard_a):もようのかけら。}{carries(shard_b):かけらの片われ。}{LIST_COUNT(equipment) == 0:めぼしい物は何もない。}
+{conditions ? poisoned:毒が回っている。薬草をかんでも効かない。どこかで洗い流さないと、傷は癒せない。}
 { carries(shard_a) || carries(shard_b):
     -> bag_menu(ret)
 - else:
@@ -110,6 +121,10 @@ VAR boss_beaten = false
 + [やめる] -> ret
 
 === use_herb(-> ret) ===
+{ conditions ? poisoned:
+    薬草をかんでみる。だが毒が回っていて、きずの熱はいっこうに引かない。この毒は、どこかで洗い流すしかなさそうだ。
+    -> ret
+}
 ~ herb_count = herb_count - 1
 ~ heal(6)
 にがい薬草をかむ。きずの熱が、すっと引いていく（体力 {player_hp}、薬草 {herb_count}）。
@@ -346,11 +361,11 @@ VAR boss_beaten = false
 
 === fight_rat ===
 { carries(pickaxe):
-    とびかかってくる大ねずみを、つるはしのひとふりで打ちたおした。だがすれちがいざま、歯がうでをかすめていた。
-    ~ take_hit(2)
+    とびかかってくる大ねずみを、つるはしのひとふりで打ちたおした。だがすれちがいざま、歯がうでに食いこんでいた。
+    ~ take_hit(3)
 - else:
     素手でなぐり合うはめになった。二度、三度——ようやく動かなくなったが、うではかみ傷だらけだ。
-    ~ take_hit(4)
+    ~ take_hit(6)
 }
 ~ rat_beaten = true
 { player_hp <= 0: -> game_over }
@@ -546,7 +561,6 @@ VAR boss_beaten = false
 }
 + [しらべる] -> drained_look
 + [たたく] -> drained_hit
-+ {mud_herb_seen && not mud_herb_taken} [とる] -> drained_take
 + [うごく] -> drained_move
 + [もちもの] -> show_bag(-> r_drained)
 + {herb_count > 0} [つかう] -> use_menu(-> r_drained)
@@ -559,8 +573,8 @@ VAR boss_beaten = false
 + [やめる] -> r_drained
 
 === look_mudcart ===
-どろをかき分けると、座席の下に油紙のつつみがはさまっていた。かたくしばってあり、中身は無事のようだ。
-~ mud_herb_seen = true
+どろをかき分けると、座席の下から、水番のものらしい古い手帳が出てきた。
+ぬれてふやけ、字はもう読めない。ここまで水が来ていたのだ。
 -> drained_look
 
 === look_rails_b2 ===
@@ -584,26 +598,15 @@ VAR boss_beaten = false
 
 === fight_crab ===
 { carries(pickaxe):
-    はさみをかいくぐって、つるはしをこうらのつなぎ目へ打ちおろす。二度目でひびが走り、三度目で大ガニはどろにしずんだ。はさみの一撃を、すねにもらっていた。
-    ~ take_hit(3)
+    はさみをかいくぐって、つるはしをこうらのつなぎ目へ打ちおろす。二度目でひびが走り、三度目で大ガニはどろにしずんだ。はさみの一撃を、すねに深くもらっていた。
+    ~ take_hit(4)
 - else:
     素手ではこうらにつめも立たない。はさみに打ちはらわれ、どろにたたきつけられながら、どうにか目の間をなぐりつけて、しとめた。
-    ~ take_hit(6)
+    ~ take_hit(8)
 }
 ~ crab_beaten = true
 { player_hp <= 0: -> game_over }
 （体力 {player_hp}）
--> r_drained
-
-=== drained_take ===
-何をとる？
-+ {mud_herb_seen && not mud_herb_taken} [油紙のつつみ] -> take_mudherb
-+ [やめる] -> r_drained
-
-=== take_mudherb ===
-~ mud_herb_taken = true
-~ herb_count = herb_count + 1
-つつみを解くと、ほした薬草が出てきた（薬草 {herb_count}）。
 -> r_drained
 
 === drained_move ===
@@ -700,15 +703,15 @@ VAR boss_beaten = false
 
 === fight_spider ===
 { carries(star_blade):
-    白く光る刃が、糸ごと大グモをなぎはらった。ひとふりでどうがさけ、大グモは斜面をころげ落ちる。とびちった糸が、うでをこすった。
-    ~ take_hit(2)
+    白く光る刃が、糸ごと大グモをなぎはらった。ひとふりでどうがさけ、大グモは斜面をころげ落ちる。とびちった糸が、うでを深くこすった。
+    ~ take_hit(3)
 - else:
     { carries(pickaxe):
-        糸をはらい、とびかかる大グモへつるはしをたたきこむ。二撃目でどうがさけ、大グモは斜面をころげ落ちて動かなくなった。かたに、きばのいたみが残った。
-        ~ take_hit(4)
+        糸をはらい、とびかかる大グモへつるはしをたたきこむ。二撃目でどうがさけ、大グモは斜面をころげ落ちて動かなくなった。かたに、きばが深くささっていた。
+        ~ take_hit(5)
     - else:
         素手ではらったうでに、きばが食いこむ。長いもみ合いの末に石でたたきつぶしたが、体じゅう傷だらけだ。
-        ~ take_hit(8)
+        ~ take_hit(10)
     }
 }
 ~ spider_beaten = true
@@ -743,14 +746,18 @@ VAR boss_beaten = false
 + [分かれ道へ] -> r_b3_hub
 + [やめる] -> r_east3
 
-// ---- 南坑道（ほりかけの道・小さな見返り） ----
+// ---- 南坑道（ほりかけの道・毒の霧とリスク購入） ----
 
 === r_south3 ===
 南の坑道。せまいためし掘りの道らしく、数十歩で、のっぺりした岩の行き止まりに突き当たる。
 天じょうからは、ときおり砂がこぼれている。
+行き止まりの手前、床のひび割れから、白っぽい霧がわき出ていた。鼻をつく、いやなにおいだ。
+{ not carries(hide_armor):
+    霧のたまった奥に、人がひとり、かべにもたれてたおれているのが見える。
+}
 + [しらべる] -> south3_look
 + [たたく] -> south3_hit
-+ {not south_herb_taken} [とる] -> south3_take
++ {not south_herb_taken || (corpse_seen && not carries(hide_armor))} [とる] -> south3_take
 + [うごく] -> south3_move
 + [もちもの] -> show_bag(-> r_south3)
 + {herb_count > 0} [つかう] -> use_menu(-> r_south3)
@@ -759,16 +766,24 @@ VAR boss_beaten = false
 何をしらべる？
 + [行き止まり] -> look_south_end
 + [道具ぶくろ] -> look_toolbag
++ {not carries(hide_armor)} [たおれている人] -> look_corpse
 + [やめる] -> r_south3
 
 === look_south_end ===
 ほりかけのまま、ほうり出された岩のかべだ。のみのあとが、とちゅうで切れている。
-床はもとの岩のままで、何かを運び出したようすもない。
+かべの手前の床がひび割れて、下から毒の霧がわき出ている。掘るのをやめたのは、これのせいだろう。
 -> south3_look
 
 === look_toolbag ===
 かべぎわに、置きわすれられた道具ぶくろがある。
 中に、ほした薬草がひとたば、油紙にくるんでおしこんであった。
+-> south3_look
+
+=== look_corpse ===
+~ corpse_seen = true
+霧ごしに目をこらす。ぶあつい革のよろいを着た男だ。手にまめがなく、体つきもちがう——坑夫ではない。星髄の荷を守っていた、やとわれの護衛だろう。
+体のまわりに、かみかけの薬草が、いくつも散らばっている。毒の霧には、薬草も効かなかったのだ。
+よろいは、まだじゅうぶんに使えそうに見える。だが、あの霧のたまりの中だ。
 -> south3_look
 
 === south3_hit ===
@@ -786,12 +801,22 @@ VAR boss_beaten = false
 === south3_take ===
 何をとる？
 + {not south_herb_taken} [道具ぶくろの薬草] -> take_south_herb
++ {corpse_seen && not carries(hide_armor)} [護衛の革のよろい（毒の霧にとびこむ）] -> take_armor
 + [やめる] -> r_south3
 
 === take_south_herb ===
 ~ south_herb_taken = true
 ~ herb_count = herb_count + 1
 薬草をふくろにうつした（薬草 {herb_count}）。
+-> r_south3
+
+=== take_armor ===
+~ equipment += hide_armor
+~ conditions += poisoned
+息を止めて霧にとびこみ、なきがらから革のよろいをはぎ取って、身につけた。ぶあつい革が、体をぐるりと包む。まともに当たっても、これでいくらか浅くてすむ。
+だが、もどる途中で息がつづかなかった。のどの奥が焼け、目の前が白くかすむ。
+~ player_hp = player_hp - player_hp / 2
+毒が、体のしんまでしみこんだ。あの護衛とおなじだ——薬草は、もう効かない。どこかで、洗い流すしかない（体力 {player_hp}）。
 -> r_south3
 
 === south3_move ===
@@ -920,14 +945,13 @@ VAR boss_beaten = false
 一撃で、うき上がっていた天じょうの岩が、ばらばらと降ってきた。
 ~ take_hit(2)
 { player_hp <= 0: -> game_over }
-かべは、かたい岩のままだ（体力 {player_hp}{conditions ? poisoned:。毒がうずく}）。
+かべは、かたい岩のままだ（体力 {player_hp}）。
 -> r_b4_hub
 
 === b4hub_move ===
 どこへうごく？
 + [ほこらへ] -> r_shrine
 + [作業場へ] -> r_gallery
-+ [毒の霧の坑道へ] -> r_pit
 + {forge_found} [かじ場へ] -> r_forge
 + [さらに下りる] -> r_b5_hub
 + [三の坑へ上る] -> r_west3
@@ -983,7 +1007,7 @@ VAR boss_beaten = false
 一撃のひびきで、天じょうから石くずが降った。
 ~ take_hit(2)
 { player_hp <= 0: -> game_over }
-岩のかべは、ひびひとつ入らない（体力 {player_hp}{conditions ? poisoned:。毒がうずく}）。
+岩のかべは、ひびひとつ入らない（体力 {player_hp}）。
 -> r_shrine
 
 === shrine_move ===
@@ -1102,56 +1126,17 @@ VAR boss_beaten = false
 + [作業場へ] -> r_gallery
 + [やめる] -> r_forge
 
-// ---- 毒の霧の坑道（リスクをとるか） ----
-
-=== r_pit ===
-毒の霧の坑道。奥から、鼻をつくいやなにおいがただよってくる。ランプの火が、心なしか細い。
-明かりのとどく奥に、くずれた薬箱がいくつも見えた。
-+ [しらべる] -> pit_look
-+ {not pit_herb_taken} [とる] -> pit_take
-+ [うごく] -> pit_move
-+ [もちもの] -> show_bag(-> r_pit)
-+ {herb_count > 0} [つかう] -> use_menu(-> r_pit)
-
-=== pit_look ===
-何をしらべる？
-+ [薬箱] -> look_pitbox
-+ [やめる] -> r_pit
-
-=== look_pitbox ===
-ここからでも、油紙のつつみがいくつものぞいているのが分かる。
-だが薬箱までの奥半分は、霧がひときわ濃い。取りに行くなら、あの毒の霧の中を走りぬけることになる。
--> pit_look
-
-=== pit_take ===
-何をとる？
-+ {not pit_herb_taken} [薬箱の薬草（毒の霧にとびこむ）] -> take_pit_herb
-+ [やめる] -> r_pit
-
-=== take_pit_herb ===
-~ pit_herb_taken = true
-~ herb_count = herb_count + 2
-~ conditions += poisoned
-息を止めてかけこみ、つつみを二つつかんで、かけもどった。
-それでも、間に合わなかった。のどの奥が焼け、体のしんに、じんとしびれが残っている（薬草 {herb_count}）。
-毒にやられた。これからは、きずのいたみが、いつもより重くなる。
--> r_pit
-
-=== pit_move ===
-どこへうごく？
-+ [分かれ道へ] -> r_b4_hub
-+ [やめる] -> r_pit
-
-// ================= B5 崩れた通路（小さな関門・泉） =================
+// ================= B5 崩れた通路（関門・解毒の泉） =================
 
 === r_b5_hub ===
 ~ depth = 5
 崩れた通路。天じょうの半分が落ちて、岩の山が行く手をふさいでいる。
 岩の山のすそを、細い水の流れが、かべぎわのすき間へ流れこんでいた。
-{ not guard_beaten:
-    岩山の手前に、岩そっくりのこうらをもつ獣——岩ガメがうずくまっている。息をするたび、こうらのつなぎ目がほのかに開いた。
-}
 わき道の奥から、かすかに水のわく音がする。
+{ not guard_beaten:
+    そのわき道と下りの道の、ちょうど分かれ目に——岩そっくりのこうらをもつ獣、岩ガメがうずくまっている。息をするたび、こうらのつなぎ目がほのかに開いた。
+    どちらへ行くにも、あれの前を通るしかない。
+}
 + [しらべる] -> b5_look
 + [たたく] -> b5_hit
 + [うごく] -> b5_move
@@ -1185,25 +1170,25 @@ VAR boss_beaten = false
 
 === fight_guard ===
 { carries(star_blade):
-    おどりかかる岩ガメの、開いたこうらのつなぎ目へ、白く光る刃をさしこむ。刃はすいこまれるように通り、岩ガメはひと声も立てずにくずれ落ちた。ふりぬきざま、こうらの角がうでを切っていた。
-    ~ take_hit(2)
+    おどりかかる岩ガメの、開いたこうらのつなぎ目へ、白く光る刃をさしこむ。刃はすいこまれるように通り、岩ガメはひと声も立てずにくずれ落ちた。ふりぬきざま、こうらの角がうでを深く切っていた。
+    ~ take_hit(3)
 - else:
     { carries(pickaxe):
         つるはしを何度打ちこんでも、こうらにはじかれる。長い長いたたかいの末に、ようやくつなぎ目を割ったときには、こちらもぼろぼろだった。
-        ~ take_hit(7)
+        ~ take_hit(8)
     - else:
         素手でいどむ相手ではなかった。ふみつぶされ、突き上げられ、それでもこうらのつなぎ目に石を打ちこんで、どうにか動きを止めた。
-        ~ take_hit(12)
+        ~ take_hit(14)
     }
 }
 ~ guard_beaten = true
 { player_hp <= 0: -> game_over }
-（体力 {player_hp}{conditions ? poisoned:。毒がうずく}）
+（体力 {player_hp}）
 -> r_b5_hub
 
 === b5_move ===
 どこへうごく？
-+ [わき道の奥へ] -> r_spring
++ {guard_beaten} [わき道の奥へ] -> r_spring
 + {guard_beaten} [岩の山をのりこえて下りる] -> climb_rockpile
 + {guard_beaten} [水が流れこむすき間を抜ける] -> through_gap
 + {not guard_beaten} [先へ進む] -> guard_blocked
@@ -1211,14 +1196,15 @@ VAR boss_beaten = false
 + [やめる] -> r_b5_hub
 
 === guard_blocked ===
-一歩ふみ出したとたん、岩と見えたこうらが、ぬっと持ち上がった。あれをどけないかぎり、先へは進めない。
+一歩ふみ出したとたん、岩と見えたこうらが、ぬっと持ち上がった。
+わき道の奥へも、下りの道へも——あれをどけないかぎり、進めない。
 -> r_b5_hub
 
 === climb_rockpile ===
 ういた岩に手をかけたとたん、足元から山がくずれた。岩といっしょに、ころげ落ちる。
 ~ take_hit(3)
 { player_hp <= 0: -> game_over }
-したたかに打った体を起こすと、くずれた岩の先に、下りの道がつづいていた（体力 {player_hp}{conditions ? poisoned:。毒がうずく}）。
+したたかに打った体を起こすと、くずれた岩の先に、下りの道がつづいていた（体力 {player_hp}）。
 -> r_lake
 
 === through_gap ===
@@ -1241,25 +1227,26 @@ VAR boss_beaten = false
 + [やめる] -> r_spring
 
 === look_spring ===
-{ spring_used:
-    あれきり、水の光は消えてしまった。いまは、ただのわき水だ。
-- else:
-    水底の砂は、かじ場の火床と同じ色に光っている。手をひたすと、指先のすり傷が、すっと軽くなった。
+水底で、白い砂があわく光っている。すきとおって、つめたそうな水だ。
+{ conditions ? poisoned:
+    この水なら、体にしみこんだ毒も、洗い流せるかもしれない。
 }
 -> spring_look
 
 === spring_use ===
 何をつかう？
-+ {not spring_used} [泉の水（あびる）] -> bathe_spring
++ [泉の水（あびる）] -> bathe_spring
 + {herb_count > 0} [薬草（自分に）] -> use_herb(-> r_spring)
 + [やめる] -> r_spring
 
 === bathe_spring ===
-~ spring_used = true
-~ player_hp = 20
-~ conditions -= poisoned
-頭から水をかぶる。きずというきずから熱がぬけ、体のしんのしびれまで、とけて流れた（体力 {player_hp}）。毒も消えたようだ。
-水の光は、それきりうすれていった。
+{ conditions ? poisoned:
+    ~ conditions -= poisoned
+    頭から水をかぶり、毒ごと洗い流す。体のしんを焼いていた熱が、すっと引いていった。
+    きずまではふさがらない。だが——これで薬草が、また効くはずだ。
+- else:
+    頭から水をかぶる。つめたさに、息が止まりそうになる。目はさえたが、きずはきずのままだ。
+}
 -> r_spring
 
 === spring_move ===
@@ -1345,7 +1332,7 @@ VAR boss_beaten = false
     水のかべになぎたおされ、石の縁にたたきつけられる。
     ~ take_hit(4)
     { player_hp <= 0: -> game_over }
-    水のいきおいが、開きかけた水門を、もとの場所へおしもどしていった（体力 {player_hp}{conditions ? poisoned:。毒がうずく}）。
+    水のいきおいが、開きかけた水門を、もとの場所へおしもどしていった（体力 {player_hp}）。
 }
 -> r_lake
 
@@ -1354,15 +1341,18 @@ VAR boss_beaten = false
     { not boss_wounded:
         ~ boss_wounded = true
         どろをけって走りより、白く光る刃を、光のすじへたたきこむ。刃は今度こそ、深々と食いこんだ。星喰いが坑道をゆらしてあばれ、ふり回された尾が、まともに当たる。
-        ~ take_hit(4)
+        ~ take_hit(5)
         { player_hp <= 0: -> game_over }
-        それでも、手の中の刃は、たしかな手ごたえを残している（体力 {player_hp}{conditions ? poisoned:。毒がうずく}）。
+        それでも、手の中の刃は、たしかな手ごたえを残している（体力 {player_hp}）。
         -> r_lake
     - else:
         ~ boss_beaten = true
         のたうつ巨体の、明滅のねもとへ。さいごの一撃を、体ごとしずみこませた。
         光のすじがひときわ強く燃え上がり——ふつりと、消えた。
-        巨体はどろにしずみこみ、動かなくなった。
+        たおれこむ巨体の尾が、さいごの力で、まともにこちらをはらっていく。
+        ~ take_hit(3)
+        { player_hp <= 0: -> game_over }
+        どろにたたきつけられた体を起こすと、巨体はもう、動かなくなっていた（体力 {player_hp}）。
         -> boss_won
     }
 - else:
@@ -1370,7 +1360,7 @@ VAR boss_beaten = false
     お返しとばかりに、なぎはらわれた尾が、どうを打った。
     ~ take_hit(6)
     { player_hp <= 0: -> game_over }
-    退くなら、いまのうちだ（体力 {player_hp}{conditions ? poisoned:。毒がうずく}）。
+    退くなら、いまのうちだ（体力 {player_hp}）。
     -> r_lake
 }
 
