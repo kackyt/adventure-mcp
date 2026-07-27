@@ -1,14 +1,14 @@
 # title: 星髄の坑道
 // =====================================================================
-//  星髄の坑道 v2.2 — サバイバル・RPG worked example (Issue #20)
+//  星髄の坑道 v2.3 — サバイバル・RPG worked example (Issue #20)
 //  探索×謎解き重心版。全編を固定コマンドパレットで統一する:
 //    しらべる（固定物→事実のみ） / とる（携行品） / たたく（力を加える）
 //    つかう（道具→対象） / うごく（場所） / もちもの（HP・薬草・装備） / はなす
 //  設計規律:
 //   - 完全決定論（RANDOM 不使用）
 //   - 本文は平易な言葉で書く（難読語は難しさではない）。固有語は「星髄」のみ
-//   - 手がかりは事実のみ。答え・解法・「○○が効く」式の結論を本文に書かない
-//   - 大目的は開幕で明示（星髄をひとかけら、生きて帰る）。鉱山の過去は探索で知る
+//   - 謎の手がかりは事実のみ。必要前提と、謎ではない目的・武器の説明は短く明示する
+//   - 大目的は開幕で明示（薬に使える固い星髄をひとかけら、生きて帰る）。最後まで変えない
 //   - 総当たり抑止 = 誤打・誤順の HP コスト（すべて予兆つき・決定論）
 //   - 詰みは事前示唆ある選択の結果のみ。HP0 は必ず終端の敗北 ED
 //  回復リソース設計（緊張の核）:
@@ -23,18 +23,18 @@
 //     （なきがらの周りに、かみかけの薬草が散らばっている）
 //  進行の背骨（謎）:
 //   B2 ①排水: 三つの水門の底の高さを観察し、水の行き先が開くよう低い方から開ける
-//   B3 ③降り口: はがされたレールの釘あとが、行き止まりの壁の下までつづく矛盾
-//   B4 ②見立て: かけら二枚を頭の中で重ねると一枚の絵になり、しるしのない壁を指す
+//   B3 ③降り口: 鎖でつながった重り台車と鉄格子から、二つの止めを外す
+//   B4 ②武器庫: 天井を支える横棒を、外れたレールで支え直してから抜く
 //   B5 岩ガメ: 呼吸と突進で変わるこうらの状態を観察し、開いた時だけ有効打を重ねる
 //   B6 ボス: 小さい水門（水のにげ道）を先に開けてから大きい水門=①の二段再演。
-//            誤順は行き場のない水があふれ返る。決着は星髄の刃（B4 の成果）
+//            背中の星髄へ近づくと襲われる。決着はB4で得た白い剣
 // =====================================================================
 
 VAR player_hp = 20
 VAR herb_count = 1
 VAR depth = 1
 VAR place = "[B1] 山みち"
-LIST equipment = pickaxe, lantern, star_blade, shard_a, shard_b, hide_armor
+LIST equipment = pickaxe, lantern, star_blade, hide_armor
 LIST conditions = poisoned
 VAR public_status = "player_hp, herb_count, equipment, conditions, depth, place"
 
@@ -52,20 +52,20 @@ VAR drained = false
 // B3
 VAR spider_beaten = false
 VAR south_herb_taken = false
-VAR corpse_seen = false
-VAR rubble_shard_seen = false
-VAR wall_opened = false
+VAR b3_cart_released = false
+VAR b3_bar_removed = false
+VAR b3_gate_open = false
 // B4
 VAR met_the_thing = false
-VAR forge_found = false
-VAR blade_forged = false
+VAR support_rail_set = false
+VAR weapon_room_open = false
 // B5-B6
 VAR guard_beaten = false
 VAR guard_phase = 0
 VAR guard_openings = 0
-VAR b5_water_seen = false
 VAR spillway_open = false
 VAR lake_drained = false
+VAR boss_engaged = false
 VAR boss_wounded = false
 VAR boss_beaten = false
 
@@ -97,28 +97,9 @@ VAR boss_beaten = false
 
 === show_bag(-> ret) ===
 体力は {player_hp}／20。薬草が {herb_count} たば。
-持ち物——{carries(pickaxe):つるはし。}{carries(lantern):ランプ。}{carries(star_blade):星髄の刃。}{carries(hide_armor):革のよろい。}{carries(shard_a):もようのかけら。}{carries(shard_b):かけらの片われ。}{LIST_COUNT(equipment) == 0:めぼしい物は何もない。}
+持ち物——{carries(pickaxe):つるはし。}{carries(lantern):ランプ。}{carries(star_blade):白い剣。}{carries(hide_armor):革のよろい。}{LIST_COUNT(equipment) == 0:めぼしい物は何もない。}
 {conditions ? poisoned:毒が回っている。薬草をかんでも効かない。どこかで洗い流さないと、傷は癒せない。}
-{ carries(shard_a) || carries(shard_b):
-    -> bag_menu(ret)
-- else:
-    -> ret
-}
-
-=== bag_menu(-> ret) ===
-+ {carries(shard_a)} [もようのかけらを見る] -> bag_shard_a(ret)
-+ {carries(shard_b)} [かけらの片われを見る] -> bag_shard_b(ret)
-+ [戻る] -> ret
-
-=== bag_shard_a(-> ret) ===
-平たい石のかけらだ。深い線が一本、大きく「く」の字に折れ曲がっている。
-折れの内側には、短いきざみがびっしりならんでいる。割れ口は右側で、するどく切れていた。
--> bag_menu(ret)
-
-=== bag_shard_b(-> ret) ===
-かけらの片われ。上のはしから点が三つ、たてにならんで落ちていき、いちばん下で小さな丸に開いている。
-割れ口は左側だ。
--> bag_menu(ret)
+-> ret
 
 === use_menu(-> ret) ===
 何をつかう？
@@ -139,8 +120,9 @@ VAR boss_beaten = false
 
 === intro ===
 あなたの村で、悪い病気がはやっている。
-薬をつくるには、白く光る石「星髄」がいる。星髄が残っているのは、この山の捨てられた鉱山だけだ。
-鉱山のいちばん深いところまで降り、星髄をひとかけら取って、生きて村へ持ち帰る。
+薬をつくるには、白く光る石「星髄」がいる。薬師に言われたのは、白い光を保った、固いかたまりをひとつ。粉や燃えかすでは、薬にならない。
+星髄が残っているのは、この山の捨てられた鉱山だけだ。
+鉱山のいちばん深いところまで降り、薬に使える星髄をひとかけら取って、生きて村へ持ち帰る。
 それが、あなたのやることだ。
 + [つぎへ] -> r_plaza
 
@@ -218,7 +200,8 @@ VAR boss_beaten = false
 
 === talk_hoshikui ===
 「星喰い。わしらは、そう呼んどった。地面の中で星髄を食って生きとる、この山のぬしよ」
-「いちばん下の坑をほっとったとき、わしらは、あいつの巣に穴を開けちまった。……ようけ死んだよ」
+「下の坑に残った星髄は、あれが食った。いまも背中で、白く光っとる」
+「十二年前、白い剣で一度だけ傷をつけた。剣は下の武器庫に置いたままだ。星髄を取るなら、あれがじゃまになる」
 ゆうれいは、それきりだまった。
 -> plaza_talk
 
@@ -627,13 +610,13 @@ VAR boss_beaten = false
 下り坑道へ近づいたとたん、大ガニがはさみをふりかぶって立ちふさがった。
 -> r_drained
 
-// ================= B3 三の坑（③降り口の謎） =================
+// ================= B3 三の坑（③重り台車と鉄格子） =================
 
 === r_b3_hub ===
 ~ depth = 3
 ~ place = "[B3] 三の坑・分かれ道"
 三の坑。降り立った先で、坑道が三つに分かれている。
-レールは東の坑道へだけのびていて、南と西の入り口は暗い。
+東の坑道へレールが下っている。そのわきから太い鎖がのび、天じょうの大きな鉄の車を回って、西の坑道へつづいていた。
 + [しらべる] -> b3hub_look
 + [うごく] -> b3hub_move
 + [もちもの] -> show_bag(-> r_b3_hub)
@@ -641,21 +624,30 @@ VAR boss_beaten = false
 
 === b3hub_look ===
 何をしらべる？
-+ [レール] -> look_rails_b3
++ [太い鎖] -> look_b3_chain
++ [東の入り口] -> look_east_mouth
 + [南の入り口] -> look_south_mouth
 + [西の入り口] -> look_west_mouth
 + [やめる] -> r_b3_hub
 
-=== look_rails_b3 ===
-下り階段のきわからまっすぐ、東の坑道へのびている。釘もまくら木も、上の坑と同じ打ち方だ。
+=== look_b3_chain ===
+{ b3_gate_open:
+    鎖はぴんと張り、天じょうの鉄の車のところで止まっている。東の坂から西の鉄格子まで、一本につながっていた。
+- else:
+    東から来た一本の鎖が、天じょうの鉄の車にかかり、そのまま西へつづいている。
+}
+-> b3hub_look
+
+=== look_east_mouth ===
+レールは東へ向かって下っている。鎖もレールにそって、暗がりへつづいていた。
 -> b3hub_look
 
 === look_south_mouth ===
-南の入り口はせまい。床はもとの岩のままで、レールをしいたあとはない。
+南の入り口はせまい。床はもとの岩のままで、白っぽい霧がうすく流れてくる。
 -> b3hub_look
 
 === look_west_mouth ===
-西の入り口は、東と同じくらい広い。だが、レールはない。
+西の奥には、太い鉄格子が見える。天じょう近くまでのびた鎖が、その上につながっていた。
 -> b3hub_look
 
 === b3hub_move ===
@@ -666,57 +658,77 @@ VAR boss_beaten = false
 + [二の坑へ上る] -> r_drained
 + [やめる] -> r_b3_hub
 
-// ---- 東坑道（くずれた道・大グモ・かけらA） ----
+// ---- 東坑道（重り台車・大グモ） ----
 
 === r_east3 ===
 ~ place = "[B3] 三の坑・東の坑道"
-東の坑道。レールの先で天じょうがくずれ、落ちた岩が斜面になって道をふさいでいる。
+東の坑道。レールが急な坂を下っている。
+{ b3_cart_released:
+    石を積んだ台車は坂の下へ消えた。太い鎖だけが、レールの上でぴんと張っている。
+- else:
+    坂の手前に、石を山ほど積んだ台車が止まっている。後ろにつながった鎖は、分かれ道の天じょうへつづいていた。
+    前輪の下には、三角の木の車止めがかませてある。
+}
 { not spider_beaten:
-    斜面の上、天じょうの穴に大グモがうずくまり、こちらの明かりへじっと目を向けていた。
+    大グモが台車の上にうずくまり、車止めまで白い糸を張っている。
 }
 + [しらべる] -> east3_look
 + [たたく] -> east3_hit
-+ {rubble_shard_seen && not carries(shard_a)} [とる] -> east3_take
++ {not b3_cart_released} [とる] -> east3_take
 + [うごく] -> east3_move
 + [もちもの] -> show_bag(-> r_east3)
 + {herb_count > 0} [つかう] -> use_menu(-> r_east3)
 
 === east3_look ===
 何をしらべる？
-+ [くずれた岩] -> look_rubble
++ [石を積んだ台車] -> look_weight_cart
++ [太い鎖] -> look_cart_chain
++ [車止め] -> look_wheel_chock
 + {not spider_beaten} [大グモ] -> look_spider
 + [やめる] -> r_east3
 
-=== look_rubble ===
-{ not spider_beaten:
-    斜面へ近づいたとたん、頭の上で糸の鳴る音がした。大グモが足を立てている。これ以上は寄れない。
-    -> east3_look
+=== look_weight_cart ===
+{ b3_cart_released:
+    台車は坂の下へ走り去り、ここにはもうない。
 - else:
-    岩の大きさはばらばらで、天じょうの穴からいまも砂がこぼれている。うき上がった岩も見える。
-    { not rubble_shard_seen:
-        ~ rubble_shard_seen = true
-        岩のすき間に、平たいかけらがはさまっていた。表面に、ひっかき傷のような細い線がきざまれている。
-    }
-    -> east3_look
+    荷台は石でいっぱいだ。レールは台車の先から急に下り、車輪は坂へ向いている。
 }
+-> east3_look
+
+=== look_cart_chain ===
+{ b3_cart_released:
+    鎖は坂の下へ強く引かれ、動かない。
+- else:
+    鎖の一方は台車の後ろにつながり、もう一方は分かれ道の天じょうへつづいている。
+}
+-> east3_look
+
+=== look_wheel_chock ===
+{ b3_cart_released:
+    前輪を止めていた木は、もう外れている。
+- else:
+    三角の木が前輪とレールの間に深くはまり、石を積んだ台車を坂の手前で止めている。
+}
+-> east3_look
 
 === look_spider ===
-どうだけで人の頭ほど——いや、それより大きい。糸は、くずれた岩の斜面いちめんにはられている。
+どうだけで人の頭ほどある。糸は台車から車止めまで重なり、近づく物を待ちかまえていた。
 -> east3_look
 
 === east3_hit ===
 何をたたく？
 + {not spider_beaten} [大グモ] -> fight_spider
-+ [くずれた岩] -> hit_rubble
++ [石を積んだ台車] -> hit_weight_cart
++ [太い鎖] -> hit_cart_chain
 + [やめる] -> r_east3
 
 === fight_spider ===
 { carries(star_blade):
-    白く光る刃が、糸ごと大グモをなぎはらった。ひとふりでどうがさけ、大グモは斜面をころげ落ちる。とびちった糸が、うでを深くこすった。
+    白い剣が、糸ごと大グモをなぎはらった。ひとふりでどうがさけ、大グモはレールの上へころげ落ちる。とびちった糸が、うでを深くこすった。
     ~ take_hit(3)
 - else:
     { carries(pickaxe):
-        糸をはらい、とびかかる大グモへつるはしをたたきこむ。二撃目でどうがさけ、大グモは斜面をころげ落ちて動かなくなった。かたに、きばが深くささっていた。
+        糸をはらい、とびかかる大グモへつるはしをたたきこむ。二撃目でどうがさけ、大グモはレールの上へころげ落ちて動かなくなった。かたに、きばが深くささっていた。
         ~ take_hit(5)
     - else:
         素手ではらったうでに、きばが食いこむ。長いもみ合いの末に石でたたきつぶしたが、体じゅう傷だらけだ。
@@ -728,27 +740,39 @@ VAR boss_beaten = false
 （体力 {player_hp}）
 -> r_east3
 
-=== hit_rubble ===
+=== hit_weight_cart ===
 { not spider_beaten:
-    斜面へふみこむ前に、大グモが糸を鳴らした。まず、あれをどうにかするしかない。
-    -> r_east3
+    台車へ近づいたとたん、大グモが糸を伝って飛びかかってきた。
+    -> fight_spider
 - else:
-    うき上がった岩をたたいたとたん、天じょうの穴から石が降ってきた。
-    ~ take_hit(2)
-    { player_hp <= 0: -> game_over }
-    くずれの斜面は、かえって深くなった。この先は、ほりぬけそうにない（体力 {player_hp}）。
+    { b3_cart_released:
+        台車はもう坂の下だ。
+    - else:
+        荷台をたたくと石が鳴った。前輪は車止めに押さえられたまま、台車は動かない。
+    }
     -> r_east3
 }
 
+=== hit_cart_chain ===
+鎖をたたくと、重い音が天じょうの鉄の車を通り、西の坑道までひびいた。鎖は切れない。
+-> r_east3
+
 === east3_take ===
 何をとる？
-+ {rubble_shard_seen && not carries(shard_a)} [平たいかけら] -> take_shard_a
++ [車止め] -> take_wheel_chock
 + [やめる] -> r_east3
 
-=== take_shard_a ===
-~ equipment += shard_a
-かけらを引き出した。深い線が一本、大きく「く」の字に折れ曲がり、折れの内側には短いきざみがびっしりならんでいる。割れ口は右側だ。
--> r_east3
+=== take_wheel_chock ===
+{ not spider_beaten:
+    車止めへ手をかけたとたん、頭の上で糸が鳴った。大グモが飛びかかってくる。
+    -> fight_spider
+}
+~ b3_cart_released = true
+車止めを引きぬく。石を積んだ台車が坂へ動き出し、鎖が音を立てて走った。
+{ not b3_bar_removed:
+    数歩ぶん下ったところで鎖が張り、台車は急に止まった。西のほうで、鉄がきしむ音がした。
+}
+-> check_b3_gate(-> r_east3)
 
 === east3_move ===
 どこへうごく？
@@ -760,14 +784,12 @@ VAR boss_beaten = false
 === r_south3 ===
 ~ place = "[B3] 三の坑・南の坑道"
 南の坑道。せまいためし掘りの道らしく、数十歩で、のっぺりした岩の行き止まりに突き当たる。
-天じょうからは、ときおり砂がこぼれている。
 行き止まりの手前、床のひび割れから、白っぽい霧がわき出ていた。鼻をつく、いやなにおいだ。
 { not carries(hide_armor):
-    霧のたまった奥に、人がひとり、かべにもたれてたおれているのが見える。
+    霧のたまった奥に、革のよろいを着た人がたおれている。手元には、かみかけの薬草がいくつも散らばっていた。
 }
 + [しらべる] -> south3_look
-+ [たたく] -> south3_hit
-+ {not south_herb_taken || (corpse_seen && not carries(hide_armor))} [とる] -> south3_take
++ {not south_herb_taken || not carries(hide_armor)} [とる] -> south3_take
 + [うごく] -> south3_move
 + [もちもの] -> show_bag(-> r_south3)
 + {herb_count > 0} [つかう] -> use_menu(-> r_south3)
@@ -781,7 +803,7 @@ VAR boss_beaten = false
 
 === look_south_end ===
 ほりかけのまま、ほうり出された岩のかべだ。のみのあとが、とちゅうで切れている。
-かべの手前の床がひび割れて、下から毒の霧がわき出ている。掘るのをやめたのは、これのせいだろう。
+かべの手前の床がひび割れ、下から毒の霧がわき出ている。掘るのをやめたのは、これのせいだろう。
 -> south3_look
 
 === look_toolbag ===
@@ -790,28 +812,15 @@ VAR boss_beaten = false
 -> south3_look
 
 === look_corpse ===
-~ corpse_seen = true
 霧ごしに目をこらす。ぶあつい革のよろいを着た男だ。手にまめがなく、体つきもちがう——坑夫ではない。星髄の荷を守っていた、やとわれの護衛だろう。
 体のまわりに、かみかけの薬草が、いくつも散らばっている。毒の霧には、薬草も効かなかったのだ。
 よろいは、まだじゅうぶんに使えそうに見える。だが、あの霧のたまりの中だ。
 -> south3_look
 
-=== south3_hit ===
-何をたたく？
-+ [行き止まり] -> hit_south_end
-+ [やめる] -> r_south3
-
-=== hit_south_end ===
-一撃で、天じょうの砂がどっとかたに落ちてきた。つづけて、こぶし大の石がひとつ、ふたつ。
-~ take_hit(2)
-{ player_hp <= 0: -> game_over }
-岩のかべには、ひびひとつ入っていない（体力 {player_hp}）。
--> r_south3
-
 === south3_take ===
 何をとる？
 + {not south_herb_taken} [道具ぶくろの薬草] -> take_south_herb
-+ {corpse_seen && not carries(hide_armor)} [護衛の革のよろい（毒の霧にとびこむ）] -> take_armor
++ {not carries(hide_armor)} [護衛の革のよろい] -> take_armor
 + [やめる] -> r_south3
 
 === take_south_herb ===
@@ -834,60 +843,108 @@ VAR boss_beaten = false
 + [分かれ道へ] -> r_b3_hub
 + [やめる] -> r_south3
 
-// ---- 西坑道（はがされたレール・つみ直された壁） ----
+// ---- 西坑道（鉄格子と横木） ----
 
 === r_west3 ===
 ~ place = "[B3] 三の坑・西の坑道"
-西の坑道。広さは東と変わらないのに、レールもまくら木もない。
-{ not wall_opened:
-    突き当たりは、かべだ。
+西の坑道。下り道を、天じょうまである太い鉄格子がふさいでいる。
+格子の上には、東から来た鎖がつながっていた。
+{ b3_gate_open:
+    鉄格子は高く持ち上がり、下の坑へつづく道が開いている。
 - else:
-    突き当たりの石づみはくずれ、その先に、下りの坑道が黒々と口を開けている。
+    格子の横には太い横木が渡され、両端がかべの金具にはまっている。
 }
 + [しらべる] -> west3_look
-+ [たたく] -> west3_hit
++ [つかう] -> west3_use
 + [うごく] -> west3_move
 + [もちもの] -> show_bag(-> r_west3)
-+ {herb_count > 0} [つかう] -> use_menu(-> r_west3)
 
 === west3_look ===
 何をしらべる？
-+ [床] -> look_west_floor
-+ [行き止まりのかべ] -> look_west_wall
++ [鉄格子] -> look_descent_gate
++ [横木] -> look_gate_bar
++ [太い鎖] -> look_gate_chain
 + [やめる] -> r_west3
 
-=== look_west_floor ===
-ほこりの下に、四角い小さなあなが二列、きちんとならんでいる。レールをとめる、あの釘のあとと同じ形だ。
-あなの列は、行き止まりのかべの下まで、まっすぐつづいていた。
--> west3_look
-
-=== look_west_wall ===
-{ not wall_opened:
-    大きさのそろった石が、すき間なくつみ上げてある。つみ口のほこりは、まわりの岩はだと同じくらい古い。
+=== look_descent_gate ===
+{ b3_gate_open:
+    鉄格子は人の背より高く上がり、下をくぐれる。
 - else:
-    くずした石づみのむこうで、折れたレールが下りの暗やみへ落ちこんでいる。
+    鉄格子は道の幅いっぱいに下りている。下へ押しても、横へゆすっても動かない。
 }
 -> west3_look
 
-=== west3_hit ===
-何をたたく？
-+ {not wall_opened} [行き止まりのかべ] -> open_wall
+=== look_gate_bar ===
+{ b3_bar_removed:
+    横木は外れ、かべの金具だけが残っている。
+- else:
+    横木の両端が、かべの金具へ深くはまっている。横木の下には、つるはしの先が入るほどのすき間があった。
+}
+-> west3_look
+
+=== look_gate_chain ===
+一本の鎖が鉄格子の上からのび、分かれ道の天じょうを通って東へつづいている。
+-> west3_look
+
+=== west3_use ===
+何をつかう？
++ {carries(pickaxe)} [つるはし] -> west3_use_pickaxe
++ {herb_count > 0} [薬草（自分に）] -> use_herb(-> r_west3)
 + [やめる] -> r_west3
 
-=== open_wall ===
-~ wall_opened = true
-ふりおろした一撃で、つまれた石があっけなくゆらいだ。岩をほるのとは、まるで手ごたえがちがう。
-石と石のすき間から、冷たい風がふき出してくる。夢中でくずしていくと——下りの坑道があらわれた。
-折れたレールが、暗やみの奥へ落ちこんでいる。
+=== west3_use_pickaxe ===
+どこにつかう？
++ [横木] -> pry_gate_bar
++ [鉄格子] -> pry_descent_gate
++ [太い鎖] -> pry_gate_chain
++ [やめる] -> r_west3
+
+=== pry_gate_bar ===
+{ b3_bar_removed:
+    横木はもう外れている。
+    -> r_west3
+}
+~ b3_bar_removed = true
+つるはしの先を横木の下へ差しこみ、体重をかける。横木が金具から外れ、床へ重い音を立てて落ちた。
+{ not b3_cart_released:
+    鉄格子がわずかにゆれた。だが、上へ引く鎖は動かない。
+}
+-> check_b3_gate(-> r_west3)
+
+=== pry_descent_gate ===
+つるはしを鉄格子の下へ入れて持ち上げようとする。格子は重く、先がすべるだけだ。
 -> r_west3
+
+=== pry_gate_chain ===
+つるはしの先を鎖の輪へかけて引く。鎖は東へ強く張り、びくともしない。
+-> r_west3
+
+=== check_b3_gate(-> ret) ===
+{ b3_gate_open:
+    -> ret
+}
+{ b3_cart_released && b3_bar_removed:
+    ~ b3_gate_open = true
+    二つの止めがなくなった。石を積んだ台車が坂を走り、鎖が天じょうの鉄の車を回って西へ引かれる。
+    重い鉄格子が、地面をこすりながら上がっていった。下の坑へつづく道が開いた。
+}
+-> ret
 
 === west3_move ===
 どこへうごく？
 + [分かれ道へ] -> r_b3_hub
-+ {wall_opened} [下の坑へ下りる] -> r_b4_hub
++ [鉄格子の向こうへ] -> try_descend_b4
 + [やめる] -> r_west3
 
-// ================= B4 下の坑（②見立ての謎・はじめての遭遇・かじ場） =================
+=== try_descend_b4 ===
+{ b3_gate_open:
+    -> r_b4_hub
+- else:
+    鉄格子が道をふさいでいる。人が通れるすき間はない。
+    -> r_west3
+}
+
+// ================= B4 下の坑（②崩れた武器庫・はじめての遭遇） =================
 
 === r_b4_hub ===
 ~ depth = 4
@@ -896,10 +953,9 @@ VAR boss_beaten = false
     -> b4_meet
 }
 下の坑の分かれ道。折れたレールが暗がりにちらばり、坑道がいく筋にも分かれている。
-どのかべも黒くしめり、天じょうのあちこちで岩がうき上がっていた。遠くで、水の落ちる重い音がしている。
-くずれた階段のわきに、たおれた立て札がある。
+どのかべも黒くしめり、遠くで水の落ちる重い音がしている。
+くずれた階段のわきに、親方の書き置きが落ちていた。
 + [しらべる] -> b4hub_look
-+ [たたく] -> b4hub_hit
 + [うごく] -> b4hub_move
 + [もちもの] -> show_bag(-> r_b4_hub)
 + {herb_count > 0} [つかう] -> use_menu(-> r_b4_hub)
@@ -907,36 +963,43 @@ VAR boss_beaten = false
 === b4_meet ===
 ~ met_the_thing = true
 降り立ったしゅんかん、やみの奥で、何かが身じろぎした。
-ランプの明かりのきわを、岩のような背中がゆっくり横切っていく。大きい。坑道いっぱいの、とほうもない大きさだ。
-白い光のすじが、その背中の上で、脈打つように明滅していた。
+ランプの明かりのきわを、岩の板を何枚も重ねたような背中が横切っていく。坑道いっぱいの、とほうもない大きさだ。
+背中には太い白い光のすじが走り、その横に、古い大きな切り傷が一本残っていた。
 + [たたく] -> meet_hit
 + [うごく（物かげにかくれる）] -> meet_wait
 
 === meet_hit ===
-つるはしを、力いっぱい打ちこんだ。
-——手ごたえが、まるでない。刃は岩とも肉ともつかない背中をすべり、えからうでまで、しびれが走った。
+{ carries(pickaxe):
+    つるはしを、力いっぱい打ちこんだ。
+- else:
+    足元の石をひろい、力いっぱいたたきつけた。
+}
+——手ごたえが、まるでない。得物は岩のような背中をすべった。
 巨体がわずかにゆれ、尾のようなものがなぎはらわれる。かべにたたきつけられた。
 ~ take_hit(3)
 { player_hp <= 0: -> game_over }
-巨体はそれきり、きょうみを失ったように岩の割れ目へすべりこみ、底のほうで重い水音がひびいた（体力 {player_hp}）。
+巨体は岩の割れ目へ体を押しこんだ。重なった背中の板がずれ、白く光る部分が一瞬むき出しになる。
+そのまま底のほうへ消え、重い水音がひびいた（体力 {player_hp}）。
 -> r_b4_hub
 
 === meet_wait ===
-息をころす。巨体はこちらを見もせず、岩の割れ目へゆっくりとすべりこんでいった。
-しばらくして、底のほうから重い水音がひびいた。
+息をころす。巨体は岩の割れ目へ体を押しこんだ。
+重なった背中の板がずれ、白く光る部分と、その横の古い切り傷が一瞬むき出しになる。
+巨体はそのまま底のほうへ消え、重い水音がひびいた。
 -> r_b4_hub
 
 === b4hub_look ===
 何をしらべる？
-+ [たおれた立て札] -> look_sign
++ [親方の書き置き] -> look_foreman_note
 + [折れたレール] -> look_b4_rails
 + [岩の割れ目] -> look_crevice
 + [やめる] -> r_b4_hub
 
-=== look_sign ===
-ほこりをはらうと、太い字が読めた。
-「下の坑は とざした。だれも降りるな。図面も直しておく。——親方」
-……地図に下の坑がなかったのは、書きわすれではなかったのだ。
+=== look_foreman_note ===
+ぬれた紙に、短い文が残っている。
+「星髄は、星喰いの背中にある」
+「白い剣なら、あれを傷つけられる」
+「剣は、作業場の武器庫に残した。——親方」
 -> b4hub_look
 
 === look_b4_rails ===
@@ -944,41 +1007,25 @@ VAR boss_beaten = false
 -> b4hub_look
 
 === look_crevice ===
-あの巨体がすべりこんでいった割れ目だ。人ひとり通れないはばなのに、あれが消えていった。
+あの巨体がすべりこんでいった割れ目だ。人ひとり通れないはばなのに、あれは重なった背中の板をずらして通りぬけた。
 のぞきこむと、はるか底に、黒い水がかすかに光っている。
 -> b4hub_look
-
-=== b4hub_hit ===
-何をたたく？
-+ [かべ] -> hit_b4hub_wall
-+ [やめる] -> r_b4_hub
-
-=== hit_b4hub_wall ===
-一撃で、うき上がっていた天じょうの岩が、ばらばらと降ってきた。
-~ take_hit(2)
-{ player_hp <= 0: -> game_over }
-かべは、かたい岩のままだ（体力 {player_hp}）。
--> r_b4_hub
 
 === b4hub_move ===
 どこへうごく？
 + [ほこらへ] -> r_shrine
 + [作業場へ] -> r_gallery
-+ {forge_found} [かじ場へ] -> r_forge
 + [さらに下りる] -> r_b5_hub
 + [三の坑へ上る] -> r_west3
 + [やめる] -> r_b4_hub
 
-// ---- ほこら（かけらの片われ） ----
+// ---- ほこら ----
 
 === r_shrine ===
 ~ place = "[B4] 下の坑・ほこらの間"
 ほこらの間。岩をほった小さなほこらに、すりへった山の神さまの石像がすえられている。
-かべには深いひびが走り、天じょうの岩はうき上がって、いまにもはがれ落ちそうだ。
-石像の前の台に、ひからびたお供えのわんと、平たいかけらがひとつ、のっていた。
+石像の前には、ひからびたお供えのわんが置かれていた。かべには深いひびが走っている。
 + [しらべる] -> shrine_look
-+ {not carries(shard_b)} [とる] -> shrine_take
-+ [たたく] -> shrine_hit
 + [うごく] -> shrine_move
 + [もちもの] -> show_bag(-> r_shrine)
 + {herb_count > 0} [つかう] -> use_menu(-> r_shrine)
@@ -986,160 +1033,201 @@ VAR boss_beaten = false
 === shrine_look ===
 何をしらべる？
 + [山の神さまの石像] -> look_god
-+ [台のかけら] -> look_shard_b
++ [お供えのわん] -> look_offering_bowl
 + [やめる] -> r_shrine
 
 === look_god ===
-顔はすりへって読めない。ただ、両手で何かをむねにかかえこむ形だけが、残っている。
+顔はすりへって読めない。両手で山をかかえ、落ちてくる岩を支える形をしている。
 -> shrine_look
 
-=== look_shard_b ===
-{ carries(shard_b):
-    台には、かけらののっていたあとだけが、ほこりに残っている。
-- else:
-    お供えとならべて、わざわざ台に置いてある。細い線のきざまれた、平たいかけらだ。
-}
+=== look_offering_bowl ===
+からの木のわんだ。底に、しなびた草の葉が一枚だけ残っている。
 -> shrine_look
-
-=== shrine_take ===
-何をとる？
-+ {not carries(shard_b)} [台のかけら] -> take_shard_b
-+ [やめる] -> r_shrine
-
-=== take_shard_b ===
-~ equipment += shard_b
-かけらを手に取った。上のはしから点が三つ、たてにならんで落ち、いちばん下で小さな丸に開いている。割れ口は左側だ。
--> r_shrine
-
-=== shrine_hit ===
-何をたたく？
-+ [かべ] -> hit_shrine_wall
-+ [やめる] -> r_shrine
-
-=== hit_shrine_wall ===
-一撃のひびきで、天じょうから石くずが降った。
-~ take_hit(2)
-{ player_hp <= 0: -> game_over }
-岩のかべは、ひびひとつ入らない（体力 {player_hp}）。
--> r_shrine
 
 === shrine_move ===
 どこへうごく？
 + [分かれ道へ] -> r_b4_hub
 + [やめる] -> r_shrine
 
-// ---- 作業場（見立ての指す一点） ----
+// ---- 作業場（崩れた武器庫） ----
 
 === r_gallery ===
 ~ place = "[B4] 下の坑・作業場"
-作業場。広い部屋のすみで、レールが大きく「く」の字に曲がったまま、とぎれている。
-天じょうのひびから水がひとすじ、糸を引いて落ち、床のくぼみに小さな水たまりを作っていた。
-{ forge_found:
-    曲がりの内側のかべはくずれ落ち、奥に小さな部屋がのぞいている。
+作業場。奥に、二つの輪へ太い鉄棒を通した鉄戸がある。
+落ちた天じょう石が、横に渡された鉄棒のまん中へのしかかり、鉄棒は下へ大きくたわんでいた。
+鉄戸の手前には床の丸い穴と、一本だけ外れたレールがある。
+{ support_rail_set:
+    外れたレールは床の穴へ立てられ、天じょう石を下から支えている。
+}
+{ weapon_room_open:
+    横の鉄棒は抜け、鉄戸は開いている。
 }
 + [しらべる] -> gallery_look
-+ [たたく] -> gallery_hit
++ [とる] -> gallery_take
++ [つかう] -> gallery_use
 + [うごく] -> gallery_move
 + [もちもの] -> show_bag(-> r_gallery)
-+ {herb_count > 0} [つかう] -> use_menu(-> r_gallery)
 
 === gallery_look ===
 何をしらべる？
-+ [曲がったレール] -> look_bent_rail
-+ [水たまり] -> look_drip
-+ [かべ] -> look_gallery_wall
++ [鉄戸] -> look_weapon_door
++ [横の鉄棒] -> look_crossbar
++ [床の丸い穴] -> look_floor_socket
++ [外れたレール] -> look_loose_rail
++ [鉄戸のすき間] -> look_door_gap
 + [やめる] -> r_gallery
 
-=== look_bent_rail ===
-かべぎわで大きく折れ曲がったまま、とぎれている。曲がりの内側は、ちょうど水たまりをかかえこむ形だ。
--> gallery_look
-
-=== look_drip ===
-天じょうから点々と、しずくが糸を引いて落ちている。くぼみの水はすんでいて、底に岩の粉がうすくしずんでいた。
--> gallery_look
-
-=== look_gallery_wall ===
-{ forge_found:
-    くずれたかべの奥に、小さな部屋がつづいている。
+=== look_weapon_door ===
+{ weapon_room_open:
+    鉄戸は開き、武器庫の中が見えている。
 - else:
-    見たところ、ほかと変わらない岩のかべだ。
+    ぶあつい鉄戸だ。取っ手はあるが、二つの輪を通る横の鉄棒が、かんぬきになっている。
 }
 -> gallery_look
 
-=== gallery_hit ===
-何をたたく？
-+ {not forge_found} [かべ] -> open_forge
+=== look_crossbar ===
+{ weapon_room_open:
+    抜いた鉄棒が床に転がっている。
+- else:
+    鉄棒の中央へ、落ちた天じょう石が直接のしかかっている。鉄棒は重さで下へ曲がり、こすれたところから石の粉が落ちていた。
+}
+-> gallery_look
+
+=== look_floor_socket ===
+深い丸い穴だ。中には、折れた木のくずが残っている。穴の真上には、天じょう石の平らな下面がある。
+-> gallery_look
+
+=== look_loose_rail ===
+{ support_rail_set:
+    レールは床の穴へまっすぐ立ち、天じょう石を受けている。
+- else:
+    床に外れたレールが一本ある。太さは丸い穴に入り、立てれば床から天じょう石まで届く長さだ。
+}
+-> gallery_look
+
+=== look_door_gap ===
+{ weapon_room_open:
+    開いた戸のむこうに、白いさやの剣が掛かっている。
+- else:
+    戸のすき間から、白いさやの剣が一本見える。横の札には「星喰いを傷つけた白い剣」と書かれていた。
+}
+-> gallery_look
+
+=== gallery_take ===
+何をとる？
++ [横の鉄棒] -> take_crossbar
 + [やめる] -> r_gallery
 
-=== open_forge ===
-~ forge_found = true
-曲がりの内側へ、一撃。
-かわいた音が、ほかの岩とはちがって高くぬけた。二撃目で、かべがまとめてはがれ落ちる——石づみの表面に岩の粉をぬりこめて、岩はだに見せかけてあったのだ。
-その奥に、小さな部屋が口を開けていた。
+=== take_crossbar ===
+{ weapon_room_open:
+    鉄棒はもう戸から抜け、床に転がっている。
+    -> r_gallery
+}
+{ not support_rail_set:
+    鉄棒へ手をかける。だが天じょう石の重さがかかり、びくともしない。
+    頭上から石が落ち、かたを打った。
+    ~ take_hit(2)
+    { player_hp <= 0: -> game_over }
+    （体力 {player_hp}）
+    -> r_gallery
+}
+~ weapon_room_open = true
+天じょう石の重さは、立てたレールへ移っている。たわみの戻った鉄棒を輪から引きぬくと、鉄戸が手前へ開いた。
+-> r_gallery
+
+=== gallery_use ===
+何をつかう？
++ [外れたレール] -> use_loose_rail
++ {herb_count > 0} [薬草（自分に）] -> use_herb(-> r_gallery)
++ [やめる] -> r_gallery
+
+=== use_loose_rail ===
+どこにつかう？
++ [床の丸い穴] -> set_support_rail
++ [鉄戸の輪] -> rail_on_door_rings
++ [天じょうの割れ目] -> rail_on_ceiling_crack
++ [やめる] -> r_gallery
+
+=== set_support_rail ===
+{ support_rail_set:
+    レールはもう床の穴へ立ててある。
+    -> r_gallery
+}
+~ support_rail_set = true
+外れたレールの端を床の丸い穴へ入れ、まっすぐ立てる。上の端が天じょう石の平らな面へ当たり、重さを受けた。
+横の鉄棒が、きしみながら少しまっすぐにもどった。
+-> r_gallery
+
+=== rail_on_door_rings ===
+レールは鉄戸の輪より太く、通らない。横にしても、戸を開ける役には立たなかった。
+-> r_gallery
+
+=== rail_on_ceiling_crack ===
+レールの先を天じょうの割れ目へ入れても、立てておく場所がない。手をはなせば、すぐ床へたおれる。
 -> r_gallery
 
 === gallery_move ===
 どこへうごく？
 + [分かれ道へ] -> r_b4_hub
-+ {forge_found} [かじ場へ] -> r_forge
++ [武器庫の中へ] -> try_enter_weapon_room
 + [やめる] -> r_gallery
 
-// ---- かじ場（刃をつくる） ----
+=== try_enter_weapon_room ===
+{ weapon_room_open:
+    -> r_weapon_room
+- else:
+    鉄戸は横の鉄棒で閉じられている。
+    -> r_gallery
+}
 
-=== r_forge ===
-~ place = "[B4] 下の坑・かじ場"
-かくされた、かじ場だ。ふいごも金床もほこりだらけだが、火床だけが生きている。
-炭のかわりに、白く光るかけらがつまれて、しずかに燃えていた。星髄だ。熱くもないのに、金床の上の空気だけが、ゆらゆらとゆれている。
-+ [しらべる] -> forge_look
-+ [たたく] -> forge_hit
-+ [つかう] -> forge_use
-+ [うごく] -> forge_move
-+ [もちもの] -> show_bag(-> r_forge)
+// ---- 武器庫（白い剣） ----
 
-=== forge_look ===
+=== r_weapon_room ===
+~ place = "[B4] 下の坑・武器庫"
+小さな武器庫だ。さびた道具の中で、白いさやに入った剣だけが、かべに掛けられている。
+剣の横の札には「星喰いを傷つけた白い剣」と書かれていた。
++ [しらべる] -> weapon_room_look
++ {not carries(star_blade)} [とる] -> weapon_room_take
++ [うごく] -> weapon_room_move
++ [もちもの] -> show_bag(-> r_weapon_room)
++ {herb_count > 0} [つかう] -> use_menu(-> r_weapon_room)
+
+=== weapon_room_look ===
 何をしらべる？
-+ [火床] -> look_hearth
-+ [金床] -> look_anvil
-+ [やめる] -> r_forge
++ [白い剣] -> look_white_sword
++ [札] -> look_sword_sign
++ [さびた道具] -> look_rusted_tools
++ [やめる] -> r_weapon_room
 
-=== look_hearth ===
-白く光るかけらが、燃えつきもせず、燃えつづけている。
-あの巨体の背中で明滅していた光と、同じ色をしている。
--> forge_look
+=== look_white_sword ===
+白いさやから、刃を少しだけ抜く。刃まで白い。
+星喰いの背中にあった古い切り傷は、この剣でつけたものだ。これなら、あれを傷つけられる。
+-> weapon_room_look
 
-=== look_anvil ===
-使いこまれた金床だ。表面に、刃物を打った細かい傷がむすうに残っている。
-ここで何かを、くり返しきたえた者がいる。
--> forge_look
+=== look_sword_sign ===
+「星喰いを傷つけた白い剣」
+それだけが、大きな字で書かれている。
+-> weapon_room_look
 
-=== forge_hit ===
-何をたたく？
-+ [金床] -> hit_anvil
-+ [やめる] -> r_forge
+=== look_rusted_tools ===
+古いつるはしや金づちが積まれている。どれもさびつき、柄もくさっていた。
+-> weapon_room_look
 
-=== hit_anvil ===
-高くすんだ音が、かじ場いっぱいに鳴りわたった。
--> forge_hit
+=== weapon_room_take ===
+何をとる？
++ {not carries(star_blade)} [白い剣] -> take_white_sword
++ [やめる] -> r_weapon_room
 
-=== forge_use ===
-何をつかう？
-+ {carries(pickaxe) && not blade_forged} [つるはし（星髄の火に）] -> forge_blade
-+ {herb_count > 0} [薬草（自分に）] -> use_herb(-> r_forge)
-+ [やめる] -> r_forge
-
-=== forge_blade ===
-~ equipment -= pickaxe
+=== take_white_sword ===
 ~ equipment += star_blade
-~ blade_forged = true
-つるはしの先を、白い火の中にしずめる。
-打ち直すまでもなかった。星髄の火が金属にからみつき、すいこまれるようにしみていく。
-引き上げたつるはしの先は、白く光る刃にかわっていた。暗やみの中で、ほのかに燃えている。
--> r_forge
+白い剣を、さやごと背負った。
+十二年前、星喰いを傷つけた剣だ。これなら、背中の星髄へ近づける。
+-> r_weapon_room
 
-=== forge_move ===
+=== weapon_room_move ===
 どこへうごく？
 + [作業場へ] -> r_gallery
-+ [やめる] -> r_forge
++ [やめる] -> r_weapon_room
 
 // ================= B5 崩れた通路（関門・解毒の泉） =================
 
@@ -1175,7 +1263,6 @@ VAR boss_beaten = false
 -> b5_look
 
 === look_b5_water ===
-~ b5_water_seen = true
 細い流れは岩山をさけて、かべぎわの低いすき間へ入りこんでいる。
 すき間は人のかたはばほどしかなく、両がわには、くだけた岩の角がつき出していた。
 -> b5_look
@@ -1204,7 +1291,7 @@ VAR boss_beaten = false
 }
 ~ guard_openings = guard_openings + 1
 { carries(star_blade):
-    白く光る刃を、開いたこうらのあいだへ打ちこむ。刃は岩のような板の奥まで通った。
+    白い剣を、開いたこうらのあいだへ打ちこむ。刃は岩のような板の奥まで通った。
     ~ take_hit(1)
     ~ guard_beaten = true
 - else:
@@ -1241,7 +1328,7 @@ VAR boss_beaten = false
 どこへうごく？
 + {guard_beaten} [わき道の奥へ] -> r_spring
 + {guard_beaten} [岩の山をのりこえて下りる] -> climb_rockpile
-+ {guard_beaten && b5_water_seen} [水が流れこむすき間を抜ける] -> through_gap
++ {guard_beaten} [水が流れこむすき間を抜ける] -> through_gap
 + {not guard_beaten} [先へ進む] -> guard_advance
 + [下の坑の分かれ道へ] -> leave_b5
 + [やめる] -> r_b5_hub
@@ -1338,13 +1425,17 @@ VAR boss_beaten = false
     岸にそっては、かわいた水路が地面の割れ目までつづき、その入り口を、小さい水門がふさいでいた。
 - else:
     { not boss_beaten:
-        水のなくなった湖の底の、どろの上に、星喰いが横たわっている。岩のような巨体の背中で、星髄の光のすじが、せわしなく明滅していた。
+        { boss_engaged:
+            水のなくなった湖の底で、星喰いが巨体を起こしている。背中の星髄を守るように、こちらの道をふさいでいた。
+        - else:
+            水のなくなった湖の底の、どろの上に、星喰いが横たわっている。背中の白い光の中に、固い星髄のかたまりが見えた。村へ持ち帰る物は、あれだ。
+        }
     - else:
-        水のなくなった湖の底の、どろの上に、星喰いが横たわっている。星髄の光のすじは、もうあわく残るのみだ。
+        水のなくなった湖の底の、どろの上に、星喰いが横たわっている。星髄の光は、もうあわく残るのみだ。
     }
 }
 + [しらべる] -> lake_look
-+ [たたく] -> lake_hit
++ {not lake_drained || (boss_engaged && not boss_beaten)} [たたく] -> lake_hit
 + [うごく] -> lake_move
 + [もちもの] -> show_bag(-> r_lake)
 + {herb_count > 0} [つかう] -> use_menu(-> r_lake)
@@ -1378,7 +1469,10 @@ VAR boss_beaten = false
 
 === look_boss ===
 どろに半分しずんだ巨体が、ゆっくりと身をよじっている。水を失って、動きがにぶい。
-背中の光のすじは、かじ場の火床と同じ色で明滅していた。
+背中には、武器庫で聞いた古い切り傷がある。そのそばで、薬に使える固い星髄が白く光っていた。
+{ boss_engaged:
+    星喰いはこちらを向き、星髄へ近づく道をふさいでいる。
+}
 -> lake_look
 
 === lake_hit ===
@@ -1386,7 +1480,7 @@ VAR boss_beaten = false
 + {not lake_drained && not spillway_open} [小さい水門] -> open_spillway
 + {not lake_drained} [大きい水門] -> break_sluice
 + {not lake_drained} [星喰い（水の中の）] -> hit_boss_in_water
-+ {lake_drained && not boss_beaten} [星喰い] -> fight_boss
++ {lake_drained && boss_engaged && not boss_beaten} [襲ってくる星喰い] -> fight_boss
 + [やめる] -> r_lake
 
 === hit_boss_in_water ===
@@ -1417,15 +1511,16 @@ VAR boss_beaten = false
 { carries(star_blade):
     { not boss_wounded:
         ~ boss_wounded = true
-        どろをけって走りより、白く光る刃を、光のすじへたたきこむ。刃は今度こそ、深々と食いこんだ。星喰いが坑道をゆらしてあばれ、ふり回された尾が、まともに当たる。
+        白い剣を抜き、十二年前の切り傷へたたきこむ。剣はかたい背中を切り、白く光る部分へ深々と入った。
+        星喰いが坑道をゆらしてあばれ、ふり回された尾が、まともに当たる。
         ~ take_hit(5)
         { player_hp <= 0: -> game_over }
-        それでも、手の中の刃は、たしかな手ごたえを残している（体力 {player_hp}）。
+        ゆうれいの話どおりだ。この剣なら、星喰いを傷つけられる（体力 {player_hp}）。
         -> r_lake
     - else:
         ~ boss_beaten = true
-        のたうつ巨体の、明滅のねもとへ。さいごの一撃を、体ごとしずみこませた。
-        光のすじがひときわ強く燃え上がり——ふつりと、消えた。
+        のたうつ巨体の、開いた古傷へ。白い剣を、体ごとしずみこませた。
+        背中の光がひときわ強く燃え上がり——ふつりと、弱くなった。
         たおれこむ巨体の尾が、さいごの力で、まともにこちらをはらっていく。
         ~ take_hit(3)
         { player_hp <= 0: -> game_over }
@@ -1433,19 +1528,31 @@ VAR boss_beaten = false
         -> boss_won
     }
 - else:
-    得物を打ちこむ。だが、手ごたえが、まるでない。岩とも肉ともつかない体は、刃という刃をすべらせてしまう。
-    お返しとばかりに、なぎはらわれた尾が、どうを打った。
+    { carries(pickaxe):
+        つるはしを打ちこむ。だが、かたい背中をすべり、傷ひとつつかない。
+    - else:
+        ひろった石をたたきつける。だが、かたい背中ではね返った。
+    }
+    星喰いの尾が、どうをまともに打った。
     ~ take_hit(6)
     { player_hp <= 0: -> game_over }
-    退くなら、いまのうちだ（体力 {player_hp}）。
+    白い剣を取りにもどるなら、いまのうちだ（体力 {player_hp}）。
     -> r_lake
 }
 
 === lake_move ===
 どこへうごく？
 + [崩れた通路へ上る] -> r_b5_hub
-+ {boss_beaten} [星喰いのそばへ] -> boss_corpse
++ {lake_drained && not boss_engaged && not boss_beaten} [背中の星髄へ近づく] -> approach_marrow
++ {boss_beaten} [背中の星髄を取りに行く] -> boss_corpse
 + [やめる] -> r_lake
+
+=== approach_marrow ===
+~ boss_engaged = true
+村へ持ち帰る星髄は、あの背中にある。
+湖の底へ足をふみ出すと、星喰いが巨体を起こした。背中の星髄を守るように道をふさぎ、尾を持ち上げる。
+近づくには、あれをしりぞけるしかない。
+-> r_lake
 
 === boss_won ===
 静けさが、山の底に満ちていく。
@@ -1462,8 +1569,8 @@ VAR boss_beaten = false
 + [星髄] -> take_marrow
 
 === take_marrow ===
-刃の先で、光のすじからひとかけらを、ほじり取った。
-てのひらの上で、白い炎がしずかに燃えている。
+白い剣の先で、背中の光るところから、固いかたまりをひとつ取り出した。
+粉でも燃えかすでもない。薬師に言われたとおり、白い光を保った星髄だ。
 -> ending_clear
 
 === corpse_move ===
@@ -1475,7 +1582,7 @@ VAR boss_beaten = false
 
 === ending_clear ===
 帰り道は、長いのぼり坂だった。
-水門の部屋をわたり、くずした石づみをくぐり、水のひいた坑道をぬけて——入り口の光が見えたとき、ふくろの中のかけらは、まだあたたかかった。
+水門の部屋をわたり、上がった鉄格子をくぐり、水のひいた坑道をぬけて——入り口の光が見えたとき、ふくろの中の星髄は、まだあたたかかった。
 { ghost_met:
     広場の岩の上に、もう、ゆうれいのすがたは無かった。
 }
