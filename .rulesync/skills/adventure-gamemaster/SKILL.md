@@ -19,6 +19,7 @@ GM として進行します。**物語の状態は engine(Ink) が一元管理**
 - **`status` に出ている公開変数しか参照しない。** 隠しフラグ（解法のネタバレ）は engine 側で
   伏せられており、あなたには渡らない。渡らない情報を推測で語らない。
 - **分岐の結果やフラグを勝手に決めない。** 次の状況は必ず `choose` の戻り値で確認する。
+- **表示境界を飛ばさない。** `choices` が `つぎへ` の1件だけでも自動選択しない。通常の選択肢と同様に提示し、プレイヤーの合図を待つ。GMが独自に次の本文を先読み・結合しない。
 
 ## 利用するツール
 
@@ -109,8 +110,9 @@ GM として進行します。**物語の状態は engine(Ink) が一元管理**
 2. `start_game("<id>")` が `sessionId` と選択肢、`status`（公開ステータスのみ）を返す。
    `status` に解法フラグ（`has_*`/`found_*` 等）・正解変数・`public_status` 自体が**現れない**こと。
 3. `choose(sessionId, 0)` で前進し、次の `scene` が返る。
-4. （自由入力ギミックのあるシナリオなら）入力停止点で `awaitingInput: true`・`choices: []` になり、
+4. （表示境界のあるシナリオなら）境界前の `scene` に次ページ本文が混ざらず、`choices` が `つぎへ` の1件になる。GMが自動選択せず提示し、ユーザーの合図後にのみ次ページへ進む。
+5. （自由入力ギミックのあるシナリオなら）入力停止点で `awaitingInput: true`・`choices: []` になり、
    `choose` が `input_required` で拒否される。誤答の `submit_input` では進まず、
    正答でのみ進行する（正答はシナリオの手がかりから統合する。GM が推測しない）。
-5. `get_situation` / `get_history` が状態を進めずに現状・履歴を返す。
-6. `end_game(sessionId)` 後、同 `sessionId` の操作が `unknown_session` になる。
+6. `get_situation` / `get_history` が状態を進めずに現状・履歴を返す。
+7. `end_game(sessionId)` 後、同 `sessionId` の操作が `unknown_session` になる。

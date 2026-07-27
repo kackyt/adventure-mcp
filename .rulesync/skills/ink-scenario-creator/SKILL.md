@@ -75,6 +75,8 @@ description: >-
 
 > **章をまたぐ長編に着手するなら、[longform_mystery_craft.md](./references/longform_mystery_craft.md) を着手前に必読**（前半「A. ジャンル不問」はすべての長編に効く）。視点の一貫／因果の鎖（主人公は核心を知らず、章ごとの目的→掴んだ情報で次章へ／飛躍・無関係挿話・封印層との齟齬を禁ず）／情報は「分野の手続き×主人公の立場」でしか出ない／解明を長編全体に配分（早く解きすぎない）／フラグで選択肢を消さない、等の **do/don't** と**着手前チェックリスト・レビュールーブリック**を収録。推理固有の作法は同書の後半とジャンルパックに集約。完成後は `longform-scenario-review` スキルで独立レビューにかける。
 
+サバイバル・RPGを主構造にする、または既存作へ大きなRPGシステムを加える場合は、プロットとメカニクスを固める前に [genres/survival_rpg.md「RPGシステムの選定」](./references/genres/survival_rpg.md) を通す。§0 で確認済みの回答を再利用し、**作品の約束／選定プロファイル／採用・翻訳・保留・不採用の判断記録**を §1 の設計ドキュメントへ添付してから実装する。
+
 「お使い」ではなく**プレイヤーが推理・工夫して解く謎**を入れる場合は [puzzle_design.md](./references/puzzle_design.md) を参照（推理に限らず脱出・探索でも使う）。特に：
 
 - **難易度は「再認/選択で済むもの＝易しい」「生成（自分で着想・法則・統合を作る）を強いるもの＝難しい」**。失敗モード5つ（機械的消去／鍵の提示／反復で飽きる／最終が推測可能／法則が恣意的）を設計時に潰す（`PUZZLE_DESIGN.md` §6.4）。
@@ -87,6 +89,7 @@ description: >-
 
 Ink 構文で実装します。基本は [ink_basics.md](./references/ink_basics.md)、複雑なロジックは [ink_advanced.md](./references/ink_advanced.md)。
 
+- **表示境界は停止選択肢で作る（不変則）**：adventure-mcp は選択肢・自由入力待ち・終端へ達するまで、本文と `->` divert を続けて一つの `scene` にする。ノット境界や改行だけではページが分かれない。章末／幕間／視点・時刻の転換／余韻など、**次の本文をまだ見せない意図的な区切り**には `+ [つぎへ] -> next_page` を置く。`つぎへ` はゲーム内動詞でなく表示制御用の一時的な例外であり、原則1択にする。すべての divert、同一場面の連続文、調査結果→同じメニュー、場所導入→本文なしコマンドハブには置かない。詳細と例は [adventure_mcp_patterns.md「表示単位の停止点」](./references/adventure_mcp_patterns.md) を参照。
 - **固定コマンドパレットで実演させる**：謎は独自トグルUIや「答えを選ぶ」N択でなく、**固定の動詞（しらべる→対象／つかう→道具→対象／もちもの 等）＋ outcome-gating** で実演させる（`PUZZLE_DESIGN.md` §0・§6、PoC: `escape_room.ink` / `legendary_forge_cmd.ink`）。解決専用コマンドを湧かせない。N択コミットは結論の「最後の確認」に留める。
 - **公開ステータス変数 `public_status` を必ず宣言**：AI に見せてよいステータス（HP・所持金・現在地など）の変数名をカンマ区切りで列挙。解法・真相フラグ（`has_*`/`is_*`/`knows_*`/正解値）は載せない。書式・判断基準は [adventure_mcp_patterns.md](./references/adventure_mcp_patterns.md) の該当節を参照。
 
@@ -106,6 +109,7 @@ Ink 構文で実装します。基本は [ink_basics.md](./references/ink_basics
 - デッドエンド（ソフトロック）が存在しない／クリア（`-> DONE`/`-> END`）へ到達可能
 - 素朴に進む失敗ルートが存在し挽回できる（致死/バッドは終端EDでソフトロックでない）
 - 一度きりイベントが再訪で再発しない
+- **意図した表示境界**がある場合は、境界前の `scene` に次ページ固有の本文が混ざらず、選択肢が原則 `つぎへ` だけであること／選択後に次ページ本文と次の意味ある選択肢が出ることを名前付きスモークで検証する
 - 前提ゲート型戦闘は「必須装備なしでは勝てない／ありでは勝てる」を両方検証（該当ジャンルのみ）
 - 自由入力（`# input:` タグ）を含む場合は「誤入力で進めない／正入力でのみ進行／正解値が本文・選択肢に露出しない」を検証（該当ライブ作品のみ。シナリオ JSON を `compileInkToJson` で用意して `submitInput` を駆動し、`seenScenes` に正解値が出ないことを assert する。契約は `puzzle_design.md` §2(A)）
 
@@ -119,4 +123,4 @@ AI は自分の物語の破綻・難易度のズレを自己検知しにくい�
 
 ### 7. 同期（rulesync 源泉を編集した場合）
 
-スキル本体や reference を編集したら `npx rulesync generate` を実行し、`.claude/` `.agents/` の生成物が源泉と一致すること（`git diff` で差分なし）を確認する。`.claude/` `.agents/` を手で編集しない。
+スキル本体や reference を編集したら `pnpm exec rulesync generate` を実行し、続けて `pnpm exec rulesync generate --check` で `.claude/` `.agents/` の生成物が源泉と一致することを確認する。`.claude/` `.agents/` を手で編集しない。
