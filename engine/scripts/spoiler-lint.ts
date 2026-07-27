@@ -29,7 +29,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRoot = resolve(__dirname, "../..");
-const defaultDirs = [
+const DEFAULT_DIRS = [
   resolve(repoRoot, "docs/06-reference/scenarios"),
   resolve(repoRoot, "engine/assets"),
 ];
@@ -189,7 +189,7 @@ function findInkFiles(target: string): string[] {
 
 function main(): void {
   const args = process.argv.slice(2);
-  const targets = args.length > 0 ? args.map((a) => resolve(a)) : defaultDirs;
+  const targets = args.length > 0 ? args.map((a) => resolve(a)) : DEFAULT_DIRS;
 
   const files = targets.flatMap(findInkFiles);
   if (files.length === 0) {
