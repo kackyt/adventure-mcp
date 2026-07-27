@@ -3,7 +3,7 @@
 > SKILL.md §0 で構造タイプ＝**サバイバル・RPG**（資源管理・戦闘・冒険進行を含む作品）を選んだときに読むパック。
 > 共通の作り方（状態秘匿・実装・検証）は SKILL.md と共通リファレンスに従う。
 > **実装テンプレ（戦闘・インベントリ・階層設計）は [survival_rpg_gimmicks.md](../survival_rpg_gimmicks.md) を必読**。
-> ライブで遊べる worked example（6階層・全テンプレ使用）: [star_marrow_mine.ink](../../../../../engine/assets/star_marrow_mine.ink)。
+> ライブで遊べる worked example（6階層・全テンプレ使用）: [star_marrow_mine.ink](../../../../../docs/06-reference/scenarios/star_marrow_mine.ink)。
 
 ## このジャンルの骨格
 
