@@ -1,10 +1,10 @@
 ---
 name: longform-scenario-review
 description: >-
-  adventure-mcp の長編 Ink シナリオを独立レビューするスキルです。推理・脱出探索・物語分岐・サバイバルRPGを対象に、
-  プレイヤー理解可能性、固定コマンド＋outcome-gating、RPG資源経済、視点・因果・伏線・結末条件、Ink/MCP契約、
-  到達性と機械検証を file:line 付きで監査します。「シナリオをレビューして」「破綻を洗って」「RPGハーネスに従っているか」
-  「謎でない説明が欠けていないか」「数値バランスを検査して」等の依頼、または長編完成後の自己チェックに使用します。
+  adventure-mcp の長編 Ink シナリオと、実装前のサバイバルRPG設計票を独立レビューするスキルです。推理・脱出探索・物語分岐・サバイバルRPGを対象に、
+  プレイヤー理解可能性、主人公・目的・当事者性、固定コマンド＋outcome-gating、RPG資源経済、視点・因果・伏線・結末条件、Ink/MCP契約、
+  到達性と機械検証を監査します。「シナリオをレビューして」「RPG設計プレフライト」「破綻を洗って」「RPGハーネスに従っているか」
+  「主人公がなぜ動くか検査して」「数値バランスを検査して」等の依頼、RPG実装前の設計ゲート、または長編完成後の自己チェックに使用します。
 ---
 
 # Longform Scenario Review
@@ -13,20 +13,35 @@ description: >-
 
 同一生成パスでの自己採点は確証バイアスに弱い。作者の封印知識で因果を補わず、初見プレイヤーが実際に情報を得る順序、実際のコマンド、実際の変数条件、実際の資源収支から検査する。
 
+## 0. 対象種別を最初に判定する
+
+レビュー開始時に、次のどちらかを宣言する。
+
+- **RPG設計プレフライト**：対象がサバイバル・RPGの設計票、プロット、人物・資源設計、またはユーザーが設計プレフライトを指定した場合
+- **Ink完成品レビュー**：対象が実行可能な `.ink`、生成JSON、関連テストを含む完成または改修シナリオの場合
+
+RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_design_preflight.md) を読み、同書の手順と `READY / NOT READY` 出力を使う。完成Ink用のStep 1〜9、コンパイル、MCP実機確認を設計段階へ要求しない。機械検証は `NOT RUN（設計段階）` と記録し、それ自体を欠陥扱いしない。
+
+設計プレフライトの `READY` は完成承認ではない。READY後に `ink-scenario-creator` が実装し、完成後に本スキルのInk完成品レビューをもう一度行う。
+
+対象が設計票の場合、設計者の意図、後で追加する予定の説明、未記載の設定で不足を補わない。設計票に実際に書かれた主人公、欲求、任務、因果、資源、コマンド計画だけを証拠にする。
+
 ## 1. 最初に適用パックを宣言する
 
 レビュー開始時に主構造・副構造を特定し、次の表を埋める。Applicable / N/A を理由なしで省略しない。
 
 | パック | Applicable / N/A | 適用条件 | 必読 |
 |---|---|---|---|
-| **Common Comprehension** | 原則 Applicable | すべての長編 | [common_comprehension_review.md](./references/common_comprehension_review.md) |
-| **Fixed Command Harness** | 謎・探索操作・RPG操作があれば Applicable | 世界への働きかけを固定コマンドで実演する作品 | [fixed_command_harness_review.md](./references/fixed_command_harness_review.md) |
+| **RPG Design Preflight** | RPG設計票なら Applicable | 主人公・目的・当事者性・使命・資源・コマンドを実装前に検査 | [rpg_design_preflight.md](./references/rpg_design_preflight.md) |
+| **Common Comprehension** | 原則 Applicable | すべての長編。設計プレフライトでは開幕契約と因果だけを適用 | [common_comprehension_review.md](./references/common_comprehension_review.md) |
+| **Fixed Command Harness** | 謎・探索操作・RPG操作があれば Applicable | 世界への働きかけを固定コマンドで実演する作品。設計段階では計画表を検査 | [fixed_command_harness_review.md](./references/fixed_command_harness_review.md) |
 | **RPG Economy** | RPGが主構造または主要副構造なら Applicable | HP・消耗品・装備・戦闘・資源管理を主要判断として約束 | [rpg_economy_review.md](./references/rpg_economy_review.md) |
 | **Mystery Craft** | 隠蔽・推理・反転が中心なら Applicable | 推理ミステリー、長編の真相開示 | [longform_mystery_craft.md](../ink-scenario-creator/references/longform_mystery_craft.md)、[puzzle_design.md](../ink-scenario-creator/references/puzzle_design.md) |
 | **Ink / MCP** | 実行可能なInkなら Applicable | `engine/assets` またはコンパイル対象 | [adventure_mcp_patterns.md](../ink-scenario-creator/references/adventure_mcp_patterns.md) |
 
 ### N/Aにしてはいけない例
 
+- RPG設計票に主人公・目的・当事者性がない：RPG Design PreflightのFAILでありN/Aではない。
 - RPGを名乗るが回復が不要：RPG EconomyのFAILでありN/Aではない。
 - 推理を名乗るが答えN択だけ：Fixed Command Harness / Mystery CraftのFAILでありN/Aではない。
 - `public_status` がない：Ink / MCPのFAILであり、本文に手動表示があることは代替にならない。
@@ -178,6 +193,8 @@ Applicableなら [longform_mystery_craft.md](../ink-scenario-creator/references/
 - **Moderate**：認知操作の反復、伏線の重複無効化、局所的なペース・供給・余剰マージンの問題。
 - **Minor**：用語、語り口、局所的な明瞭性。
 
+RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_design_preflight.md) の重大度を使う。主人公・欲求・来訪理由・任務・成功条件・個人的損失・継続理由のいずれかが欠ける、または最終使命が決戦前に成立しない場合はBlockerとする。偽の職業／動機選択、未形成の関係への献身要求、作者推奨回答のスコア採点、無料解答によるRPG経済消失はMajorとする。
+
 点数でハードゲート違反を相殺しない。Blockerが一つあれば、総合点が高くても承認扱いにしない。
 
 ## 5. 指摘の必須形式
@@ -213,6 +230,12 @@ Applicableなら [longform_mystery_craft.md](../ink-scenario-creator/references/
 
 ## 6. 出力順
 
+### RPG設計プレフライト
+
+[rpg_design_preflight.md](./references/rpg_design_preflight.md) のテンプレートを使い、最初に `判定: READY / NOT READY` を置く。続けてBlocker、Major、Moderate、開幕契約、作品の約束、使命の因果列、主人公置換・動機削除・帰還可能性、偽選択、関係形成、主題の実演、RPG資源経済、固定コマンド計画、実装後に必要な検証を出す。BlockerまたはMajorが一つでもあれば `NOT READY` とする。
+
+### Ink完成品レビュー
+
 1. 対象・変更範囲・適用パック
 2. Blocker
 3. Major
@@ -230,6 +253,17 @@ Applicableなら [longform_mystery_craft.md](../ink-scenario-creator/references/
 次はファイル名専用のハードコード規則ではなく、レビューが本質的欠陥を拾えるか確認する校正例。
 
 ### hoshigui_no_kane_expanded 型
+
+設計プレフライトでは、固有名に依存せず次の一般形を検出する。
+
+- 主人公が「旅人」だけで、名前・社会的立場・来訪経緯・個人的利害がない。
+- 「村を救う」という任務はあるが、主人公が救う理由と、危険を知っても帰らない理由がない。
+- 職業・動機を選んでも、文章以外の情報・経路・資源・利害が変わらない。
+- 見知らぬ同行者への好意・献身を早期に要求し、未説明の関係値を最良ED条件にする。
+- 哲学的な完成回答を選ばせ、作者推奨回答へ信頼度・決意度を加点する。
+- 最終選択で初めて使命、代償、世界法則を提示する。
+
+完成品レビューでは、さらに次を検出する。
 
 - 祠・振り子・ボスが固定コマンド＋outcome-gatingでなく、完成済み解法N択・解決専用コマンドになっている。
 - 最適経路でHP満タン・回復未使用のままボスを倒せ、必須通行料が実質0である。
