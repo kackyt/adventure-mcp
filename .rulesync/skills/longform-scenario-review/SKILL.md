@@ -41,7 +41,7 @@ description: >-
 4. 一般的なジャンルガイド
 5. 文体・好み
 
-一般的なRPG慣習からコマンドや数値則を創作しない。特に固定コマンドは、`ink-scenario-creator` と適用ジャンルパックに書かれた語彙だけを根拠にする。
+一般的なジャンル慣習からコマンドや数値則を創作しない。固定コマンドは、`PUZZLE_DESIGN.md` §6 のジャンル別パレット、`ink-scenario-creator`、適用ジャンルパックに書かれた語彙だけを根拠にする。推理へ冒険パレットを、脱出へRPG用対応を流用しない。
 
 ## 3. レビュー手順
 
@@ -77,14 +77,15 @@ Applicableなら [fixed_command_harness_review.md](./references/fixed_command_ha
 
 必須成果物：
 
-1. 場所ごとのトップレベル動詞表
-2. 宣言された固定パレットとの差分
-3. 主要解法ごとの outcome-gating 表
-4. N択が「解決過程」か「最後の確認」かの分類
-5. RPGの場合は正規コマンド対応との照合
-6. `escape_room.ink` / `legendary_forge_cmd.ink` との構造比較
+1. 作品の操作形式に合うジャンル別パレット（探偵・推理／脱出／冒険）の選択と根拠
+2. 場所ごとのトップレベル動詞表
+3. 選択した固定パレットとの差分
+4. 主要解法ごとの outcome-gating 表
+5. N択が「解決過程」か「最後の確認」かの分類
+6. 選択したジャンルのPoCとの構造比較（推理は `detective_command.ink`、脱出は `escape_room.ink`、冒険・RPGは `adventure_command.ink` / `legendary_forge_cmd.ink`）
+7. 推理では `つきつける→人物→証拠`、RPGでは適用ジャンルパックの正規コマンド対応との照合
 
-主構造の謎・RPGが、独自トグルUI、答えN択、知識フラグ後に湧く解決専用コマンドで進む場合はBlocker候補とする。
+主構造の謎・RPGが、選択すべきジャンル別パレットを使わず、独自トグルUI、答えN択、知識フラグ後に湧く解決専用コマンドで進む場合はBlocker候補とする。
 
 ### Step 5: RPG Economyを数値検算する
 
