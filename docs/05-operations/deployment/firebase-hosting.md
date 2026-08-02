@@ -33,12 +33,34 @@ GitHub Actions は使わず、人間の判断で 1 コマンドデプロイす�
 ### 3.1 Firebase プロジェクト
 
 1. [Firebase コンソール](https://console.firebase.google.com/) でプロジェクトを作成する
-2. `web/.firebaserc` の `your-firebase-project-id` を実際のプロジェクト ID に書き換える
+2. `web/.firebaserc` にプロジェクト ID を設定する。このファイルは gitignore 対象のため
+   クローン直後は存在しない。無ければ以下の内容で新規作成する
+
+```json
+{
+  "projects": {
+    "default": "your-firebase-project-id"
+  }
+}
+```
+
 3. デプロイ用アカウントでログインする
 
 ```bash
 pnpm --filter web exec firebase login
 ```
+
+4. Hosting ターゲット `web` を実サイトへ対応付ける
+
+```bash
+# <site-id> は Firebase コンソール → Hosting のサイト ID（既定サイトならプロジェクト ID と同じ）
+pnpm --filter web exec firebase target:apply hosting web <site-id>
+```
+
+`web/firebase.json` が `"target": "web"` を指定しているため、この対応付けは必須です。
+実行すると `web/.firebaserc` に `targets` が追記されます（このファイルは gitignore 対象なので、
+環境ごとに 1 回ずつ実行が必要）。未設定のままデプロイすると
+`Hosting target web not detected` で失敗します。
 
 ### 3.2 GCS バケット（シナリオ配信）
 
@@ -166,7 +188,7 @@ VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ## 6. デプロイ
 
 ```bash
-pnpm --filter web deploy
+pnpm --filter web deploy:firebase
 ```
 
 これ 1 コマンドで Vite の静的ビルド（`web/dist/`）と `firebase deploy --only hosting` が実行されます。
@@ -188,6 +210,7 @@ pnpm --filter web deploy
 | CORS エラー（blocked 表示） | 3.2 の CORS 適用漏れ、または origin 制限が厳しすぎる |
 | 差し替えたのに古いシナリオが出る | GCS のキャッシュ。対象 JSON にも `no-cache` を適用 |
 | `firebase deploy` が対話プロンプトで止まる | `web/.firebaserc` のプロジェクト ID 未設定。3.1 を実施 |
+| `Hosting target web not detected` | `firebase target:apply hosting web <site-id>` 未実行。3.1 の手順 4 を実施 |
 
 - `web/public/scenarios/` はローカル開発専用（gitignore 済み）。Hosting へは
   `web/firebase.json` の `ignore` 設定によりアップロードされない
