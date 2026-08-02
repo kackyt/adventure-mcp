@@ -1,11 +1,11 @@
 ---
 title: "PLAYBOOK"
-version: "1.9.0"
+version: "1.10.0"
 status: "approved"
 created: "2026-06-01"
-updated: "2026-07-05"
+updated: "2026-08-02"
 owner: "kacky"
-ace_entry_count: 23
+ace_entry_count: 26
 tags: [ace, playbook, knowledge-management]
 references:
   - docs/ACE_FRAMEWORK.md
@@ -615,3 +615,61 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 **Context**: PR #27で `server.spec` を実ファイル依存から分離するため、物理シナリオファイルを `docs` へ移動させ、テスト自体はインライン文字列から動的コンパイル（`compileInkToJson`）した最小構成のシナリオで実行する方式にリファクタリングした。
 
 **Action**: パーサーやエンジン内部ロジックをテストする際は、外部の物理ファイルをロードするのではなく、テストファイル内にハードコードした最小シナリオを動的コンパイルして依存を断ち切る。
+
+<a id="ace-28-1"></a>
+
+### ACE-28-1: Ink LIST型変数の外部公開におけるカンマ区切り正規化
+
+| フィールド | 値           |
+| ---------- | ------------ |
+| Category   | architecture |
+| Origin     | PR #28       |
+| Date       | 2026-08-02   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: Ink シナリオの `LIST` 型変数を AI や MCP サーバー等へ状態共有する際、内部オブジェクトのまま渡さず、カンマ区切り文字列に正規化して可視性と安全性を確保する。
+
+**Context**: PR #28 にて、`getPublicVariables` が Ink の `LIST` 変数をそのまま抽出すると AI がインベントリや状態異常を正確に評価できなかったため、`LIST` 型を検知してカンマ区切り文字列（例: `"herb, key"`）に変換し、非プリミティブ値を除外する層を追加した。
+
+**Action**: ゲームエンジンの状態をAIや外部クライアントへ渡す境界では、`LIST` 変数やカスタムデータ型をフラットな文字列やプリミティブ値に変換・正規化するレイヤーを挟む。
+
+<a id="ace-28-2"></a>
+
+### ACE-28-2: 参照用 Worked Example シナリオと本番アセット・ビルドパイプラインの分離
+
+| フィールド | 値           |
+| ---------- | ------------ |
+| Category   | architecture |
+| Origin     | PR #28       |
+| Date       | 2026-08-02   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: スキルや設計ドキュメントの解説用に作成された Worked Example（参考実装シナリオ）は、本番アセットディレクトリや自動コンパイル対象から外し、`docs/` 配下へ独立配置する。
+
+**Context**: PR #28 で追加したサバイバル・RPG 参照実装 `star_marrow_mine.ink` を当初 `engine/assets/` に置いていたが、アセット配信や自動テスト対象に混入してテスト保守コストが増大したため、`docs/` 配下へ移設し本番ビルドから切り離した。
+
+**Action**: 仕様解説やスキル教育用のサンプル・Worked Example は `engine/assets` ではなく `docs/` 配下に配置し、`pnpm build:ink` や実行時シナリオレジストリから対象外であることを明示する。
+
+<a id="ace-28-3"></a>
+
+### ACE-28-3: Ink シナリオにおける表示停止点 `+ [つぎへ]` の利用契約
+
+| フィールド | 値           |
+| ---------- | ------------ |
+| Category   | coding       |
+| Origin     | PR #28       |
+| Date       | 2026-08-02   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: クライアントの表示を一時停止させるためのダミー選択肢 `+ [つぎへ]` は、テンポを阻害しないよう章末・幕間・重大な視点転換などの明確な節目に限定して配置する。
+
+**Context**: PR #28 のシナリオ設計指針において、divert（`->`）のみではクライアント側がテキスト表示を止めない仕様に対して `+ [つぎへ]` を乱用するとプレイヤーのクリック回数が無駄に増えて UX を損なう懸念が整理された。
+
+**Action**: Ink シナリオ作成時、すでに他の選択肢で止まる場面や単なる行区切りでの `+ [つぎへ]` 配置を禁止し、章の区切りや劇的な展開切り替え時などの意図的な停止点にのみ絞って利用する。
+
