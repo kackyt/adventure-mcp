@@ -9,6 +9,8 @@
 - [ink-scenario-creator/SKILL.md](../../ink-scenario-creator/SKILL.md) — 固定コマンド＋outcome-gating の実装契約
 - [puzzle_design.md §6.3](../../ink-scenario-creator/references/puzzle_design.md) — 動詞固定、対象サブメニュー、N択境界
 - [survival_rpg.md](../../ink-scenario-creator/references/genres/survival_rpg.md) — RPGでの正確なコマンド対応
+- [escape_exploration_gimmicks.md](../../ink-scenario-creator/references/escape_exploration_gimmicks.md) — 脱出の六動詞階層、段階発見、outcome-gating、入力装置
+- [escape_exploration_review.md](./escape_exploration_review.md) — 脱出の探索量・依存・手数・偽ボリューム監査。脱出作品では本レビューと併用
 - [PUZZLE_DESIGN.md §0・§6](../../../../docs/06-reference/PUZZLE_DESIGN.md) — 結果ゲートとジャンル別パレット
 - [detective_command.ink](../../../../docs/06-reference/scenarios/detective_command.ink) — 探偵・推理パレットと `つきつける→人物→証拠`
 - [escape_room.ink](../../../../docs/06-reference/scenarios/escape_room.ink) — 脱出パレットの `つかう→道具→対象` とフェアな空振り
@@ -54,15 +56,15 @@
 ### 脱出パレット
 
 ```text
-しらべる → 対象
-とる
-つかう → 道具 → 対象
-おす・うごかす → 対象
-もちもの
-ばしょいどう → 場所
+しらべる → 見えている場所・物 → 発見済みの部位
+とる → 露出している物
+つかう → 所持品 → 発見済みの対象
+おす・うごかす → 発見済みの可動部・操作部
+もちもの → 所持品と既に観察した事実の確認
+ばしょいどう → 部屋・安定した視点
 ```
 
-解決の核は道具と対象の組み合わせ。構造は [escape_room.ink](../../../../docs/06-reference/scenarios/escape_room.ink) / `escape_mansion.ink` と比較する。
+解決の核は道具と対象の組み合わせ。`しらべる` は見えているランドマークから発見済みの部位へ段階化し、入力装置は `おす・うごかす → 入力装置 → 値を入力する` から自由入力へ進める。詳細は [escape_exploration_gimmicks.md](../../ink-scenario-creator/references/escape_exploration_gimmicks.md)、探索量と依存の独立監査は [escape_exploration_review.md](./escape_exploration_review.md) を使う。構造は [escape_room.ink](../../../../docs/06-reference/scenarios/escape_room.ink)、[escape_mansion.ink](../../../../docs/06-reference/scenarios/escape_mansion.ink)、作例 [sealed_guest_room.ink](../../../../docs/06-reference/scenarios/sealed_guest_room.ink) と比較する。
 
 ### 冒険パレット
 
@@ -97,6 +99,37 @@
 ### 表示制御の例外
 
 `つぎへ` はページ停止点を作る表示制御用の例外であり、ゲーム内動詞ではない。純粋なページ停止点で原則1択として使い、謎・移動・戦闘のゲートを代替させない。
+
+### 行動結果からsceneへ入り直す境界
+
+adventure-mcp の `GameSession` は、選択肢・入力待ち・終端まで Ink の本文と divert を一つの `scene` に結合する。したがって、行動結果の後で導入・状態説明を出す場所／sceneへ入り直す経路は、knotが分かれているだけでは表示境界にならない。
+
+Applicableな完成Inkでは、実際の `GameSession.scene`／`choices` で次を監査する。
+
+| 代表経路 | 結果ページ | `つぎへ` 後 | 判定 |
+|---|---|---|---|
+| 前提不足の移動ゲート | 失敗理由だけ | 元の場所本文＋固定コマンド | |
+| 成功した移動ゲート | 移動結果だけ | 移動先本文＋固定コマンド | |
+| `おす・うごかす` の成功・失敗 | 操作結果だけ | 現在地本文＋固定コマンド | |
+| `つかう` の正用途・誤用途・組み合わせ | 使用結果だけ | 現在地本文＋固定コマンド | |
+| `とる`／`もちもの`／入力結果 | 取得・一覧・正誤結果だけ | 現在地本文＋固定コマンド | |
+
+PASS：
+
+- 結果ページに、次に入る場所の導入・状態説明が混ざらない。
+- 純粋な結果ページの choices は `つぎへ` 1件である。
+- `つぎへ` の後に、期待した場所本文と固定コマンドが出る。
+- 結果ページ時点の公開現在地が本文と矛盾しない。
+- 結果本文を挟まない通常移動・キャンセルは、選択自体を停止点として直接場所本文へ進む。
+- 調査結果から本文なしメニュー／短い対象質問へ戻る経路には、冗長な `つぎへ` を置かない。
+
+FAIL：
+
+- `失敗文 -> 本文あり場所ハブ` のように、結果と場所説明が同じ MCP `scene` へ連結される。
+- 逆に、すべての divert や全サブメニュー復帰へ機械的に `つぎへ` を足し、操作を不必要に細切れにする。
+- knot境界だけを見て「別scene」と判定し、実行時の `scene`／`choices` を確認しない。
+
+主コマンドループ全体で系統的に違反する場合は Major のMCP／表示契約不備候補とする。孤立した一件は、文章の混線量、誤読、操作テンポへの実害に応じて重大度を決める。
 
 ## 4. トップレベル動詞のドリフト監査
 
@@ -216,6 +249,18 @@ RPGパックがApplicableの場合も、専用戦闘UIや新規動詞を作ら�
 - 真鍮の鍵を扉に使う、鉄の鍵を引き出しに使う等の誤組み合わせが、世界内の理由で空振りする。
 - 鉄の鍵を扉に使ったときだけ解錠する。
 
+### sealed_guest_room.ink（脱出・作例）
+
+確認点：
+
+- 六動詞が順序付き部分集合として安定し、ランドマークから部位へ段階的に発見する。
+- 入力装置、順序操作、最終操作が、手がかり取得前後で同じ経路に残る。
+- 誤入力、誤順序、誤使用の後も同じ経路から再試行できる。
+- 移動ゲート、操作、道具使用、取得、入力結果が、本文あり場所ハブへ入る前に結果ページで止まり、場所説明を同じ `scene` へ連結しない。
+- 通常移動、キャンセル、調査メニュー復帰には冗長な `つぎへ` がない。
+- `public_status` が `place` だけで、所持品・発見・段階・正解値を公開しない。
+- 具体的な正解値や正解順序はレビュー本文へ転記しない。
+
 ### adventure_command.ink（冒険）
 
 確認点：
@@ -248,4 +293,4 @@ RPGパックがApplicableの場合も、専用戦闘UIや新規動詞を作ら�
 - 該当する正規参照とPoC
 - `PASS` / `FAIL` 判定
 
-主構造の謎・RPGループが固定コマンド＋outcome-gatingを採用していない場合は、局所的なUI問題でなく **Blocker候補**として扱う。
+主構造の謎・脱出探索・RPGループが固定コマンド＋outcome-gatingを採用していない場合は、局所的なUI問題でなく **Blocker候補**として扱う。脱出・探索の量と依存の薄さは、別にEscape Explorationレビューで判定する。

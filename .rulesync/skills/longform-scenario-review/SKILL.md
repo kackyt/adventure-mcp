@@ -1,10 +1,10 @@
 ---
 name: longform-scenario-review
 description: >-
-  adventure-mcp の長編 Ink シナリオと、実装前のサバイバルRPG設計票を独立レビューするスキルです。推理・脱出探索・物語分岐・サバイバルRPGを対象に、
-  プレイヤー理解可能性、主人公・目的・当事者性、固定コマンド＋outcome-gating、RPG資源経済、視点・因果・伏線・結末条件、Ink/MCP契約、
-  到達性と機械検証を監査します。「シナリオをレビューして」「RPG設計プレフライト」「破綻を洗って」「RPGハーネスに従っているか」
-  「主人公がなぜ動くか検査して」「数値バランスを検査して」等の依頼、RPG実装前の設計ゲート、または長編完成後の自己チェックに使用します。
+  adventure-mcp の長編 Ink シナリオと、実装前のサバイバルRPG／脱出探索設計票を独立レビューするスキルです。推理・脱出探索・物語分岐・サバイバルRPGを対象に、
+  プレイヤー理解可能性、主人公・目的・当事者性、固定コマンド＋outcome-gating、脱出の探索量と依存、RPG資源経済、視点・因果・伏線・結末条件、Ink/MCP契約、
+  到達性と機械検証を監査します。「シナリオをレビューして」「RPG設計プレフライト」「脱出設計プレフライト」「破綻を洗って」「ハーネスに従っているか」
+  「主人公がなぜ動くか検査して」「探索量／数値バランスを検査して」等の依頼、実装前の設計ゲート、または長編完成後の自己チェックに使用します。
 ---
 
 # Longform Scenario Review
@@ -15,16 +15,17 @@ description: >-
 
 ## 0. 対象種別を最初に判定する
 
-レビュー開始時に、次のどちらかを宣言する。
+レビュー開始時に、次のいずれかを宣言する。
 
-- **RPG設計プレフライト**：対象がサバイバル・RPGの設計票、プロット、人物・資源設計、またはユーザーが設計プレフライトを指定した場合
+- **RPG設計プレフライト**：対象がサバイバル・RPGの設計票、プロット、人物・資源設計、またはユーザーがRPG設計プレフライトを指定した場合
+- **脱出設計プレフライト**：対象が脱出・探索の設計票、探索面マップ、依存グラフ、アイテム・手数設計、またはユーザーが脱出設計プレフライトを指定した場合
 - **Ink完成品レビュー**：対象が実行可能な `.ink`、生成JSON、関連テストを含む完成または改修シナリオの場合
 
-RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_design_preflight.md) を読み、同書の手順と `READY / NOT READY` 出力を使う。完成Ink用のStep 1〜9、コンパイル、MCP実機確認を設計段階へ要求しない。機械検証は `NOT RUN（設計段階）` と記録し、それ自体を欠陥扱いしない。
+RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_design_preflight.md)、脱出設計プレフライトでは [escape_exploration_review.md](./references/escape_exploration_review.md) を読み、各書の手順と `READY / NOT READY` 出力を使う。完成Ink用のStep 1〜9、コンパイル、MCP実機確認を設計段階へ要求しない。機械検証は `NOT RUN（設計段階）` と記録し、それ自体を欠陥扱いしない。
 
-設計プレフライトの `READY` は完成承認ではない。READY後に `ink-scenario-creator` が実装し、完成後に本スキルのInk完成品レビューをもう一度行う。
+設計プレフライトの `READY` は完成承認ではない。READY後に `ink-scenario-creator` が実装し、完成後に本スキルのInk完成品レビューをもう一度行う。脱出・探索の完成品では、Escape ExplorationとFixed Command HarnessをともにApplicableとして監査する。
 
-対象が設計票の場合、設計者の意図、後で追加する予定の説明、未記載の設定で不足を補わない。設計票に実際に書かれた主人公、欲求、任務、因果、資源、コマンド計画だけを証拠にする。
+対象が設計票の場合、設計者の意図、後で追加する予定の説明、未記載の設定で不足を補わない。RPGでは主人公、欲求、任務、因果、資源、コマンド計画、脱出・探索では探索面、依存、所持品、手がかり、手数、回復計画として、設計票に実際に書かれた内容だけを証拠にする。
 
 ## 1. 最初に適用パックを宣言する
 
@@ -33,8 +34,9 @@ RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_des
 | パック | Applicable / N/A | 適用条件 | 必読 |
 |---|---|---|---|
 | **RPG Design Preflight** | RPG設計票なら Applicable | 主人公・目的・当事者性・使命・資源・コマンドを実装前に検査 | [rpg_design_preflight.md](./references/rpg_design_preflight.md) |
-| **Common Comprehension** | 原則 Applicable | すべての長編。設計プレフライトでは開幕契約と因果だけを適用 | [common_comprehension_review.md](./references/common_comprehension_review.md) |
+| **Common Comprehension** | 原則 Applicable | すべての長編。プレイヤー向け文章の可読性、開幕契約、因果、意思決定を検査。設計プレフライトでは開幕契約と因果だけを適用 | [common_comprehension_review.md](./references/common_comprehension_review.md) |
 | **Fixed Command Harness** | 謎・探索操作・RPG操作があれば Applicable | 世界への働きかけを固定コマンドで実演する作品。設計段階では計画表を検査 | [fixed_command_harness_review.md](./references/fixed_command_harness_review.md) |
+| **Escape Exploration** | 脱出・探索が主構造または主要副構造なら Applicable | 探索面、発見フェーズ、依存、所持品、手がかり、手数、再訪を設計前後に検査 | [escape_exploration_review.md](./references/escape_exploration_review.md) |
 | **RPG Economy** | RPGが主構造または主要副構造なら Applicable | HP・消耗品・装備・戦闘・資源管理を主要判断として約束 | [rpg_economy_review.md](./references/rpg_economy_review.md) |
 | **Mystery Craft** | 隠蔽・推理・反転が中心なら Applicable | 推理ミステリー、長編の真相開示 | [longform_mystery_craft.md](../ink-scenario-creator/references/longform_mystery_craft.md)、[puzzle_design.md](../ink-scenario-creator/references/puzzle_design.md) |
 | **Ink / MCP** | 実行可能なInkなら Applicable | `engine/assets` またはコンパイル対象 | [adventure_mcp_patterns.md](../ink-scenario-creator/references/adventure_mcp_patterns.md) |
@@ -43,6 +45,7 @@ RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_des
 
 - RPG設計票に主人公・目的・当事者性がない：RPG Design PreflightのFAILでありN/Aではない。
 - RPGを名乗るが回復が不要：RPG EconomyのFAILでありN/Aではない。
+- 脱出を名乗るが探索面や依存グラフが薄い：Escape ExplorationのFAILでありN/Aではない。
 - 推理を名乗るが答えN択だけ：Fixed Command Harness / Mystery CraftのFAILでありN/Aではない。
 - `public_status` がない：Ink / MCPのFAILであり、本文に手動表示があることは代替にならない。
 
@@ -55,6 +58,8 @@ RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_des
 3. 作品で合意・宣言された約束
 4. 一般的なジャンルガイド
 5. 文体・好み
+
+小学校高学年から中学生が通常のプレイ文章を辞書なしで読めるという可読性の最低基準は、5の「文体・好み」ではなく、Common Comprehensionの共通契約として扱う。その基準を満たしたうえで、硬派・ライト、簡潔・叙情的などの文体を選ぶ。
 
 一般的なジャンル慣習からコマンドや数値則を創作しない。固定コマンドは、`PUZZLE_DESIGN.md` §6 のジャンル別パレット、`ink-scenario-creator`、適用ジャンルパックに書かれた語彙だけを根拠にする。推理へ冒険パレットを、脱出へRPG用対応を流用しない。
 
@@ -78,6 +83,9 @@ RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_des
 
 [common_comprehension_review.md](./references/common_comprehension_review.md) に従い、最低限次を確認する。
 
+- プレイヤー向け文章が、小学校高学年から中学生が辞書なしで読める語彙と文の長さか。難しい熟語・専門語・独自語が必要なら、初出時に形・場所・動きを普通の言葉で説明しているか。
+- 同じ物の呼び名が統一され、一文へ未知の人物・物・仕組みを詰め込んでいないか。
+- 初見の読み手が、答えを解かなくても現在地・目標・目の前の物・選べる行動・操作結果を言い直せるか。
 - 情報を「謎の対象／解法／背景前提／操作・資源規則」に分類したか。
 - 開幕で誰・目的・完了条件が分かるか。
 - 各遷移が「目的→観測結果→形成できる認識→次の行動理由」でつながるか。
@@ -101,6 +109,25 @@ Applicableなら [fixed_command_harness_review.md](./references/fixed_command_ha
 7. 推理では `つきつける→人物→証拠`、RPGでは適用ジャンルパックの正規コマンド対応との照合
 
 主構造の謎・RPGが、選択すべきジャンル別パレットを使わず、独自トグルUI、答えN択、知識フラグ後に湧く解決専用コマンドで進む場合はBlocker候補とする。
+
+### Step 4.5: Escape Explorationを実施する
+
+脱出・探索がApplicableなら [escape_exploration_review.md](./references/escape_exploration_review.md) を全項目実施する。Fixed Command Harnessと併用し、片方だけで代替しない。
+
+設計プレフライトでは、規模プリセット、探索面マップ、依存グラフ、アイテム役割表、手がかりと錠の表、意味のある手数見積り、回復可能性、公開境界を検査し、BlockerまたはMajorが一つでもあれば `NOT READY` とする。
+
+完成品では最低限次を再計測する。
+
+1. 発見フェーズ、安定視点、ランドマーク、二段目の部位、所持品、主要ゲート、意味のある手数、再訪
+2. 依存グラフの最長列、並行探索線、統合点、以前の場所へ戻る辺
+3. アイテム×対象マトリクスの用途即断性、誤使用反応、取得から使用までの距離、再利用
+4. 手がかりが複数地点に分散し、コード・順序・組み合わせへ統合されるか
+5. フェーズ進行で古い場所の意味が変わるか
+6. 置物、単純 key-lock、定型空振り、無意味な往復による偽ボリューム
+7. 想定初見ルートと最短ルートの手数差、コールドプレイの実測時間と詰まり方
+8. 誤使用・誤順序・誤入力からの復帰、`public_status = "place"` の公開境界
+
+六動詞へ適合していても主構造が薄い場合は、コマンド違反とは別のMajor／Blocker候補として報告する。
 
 ### Step 5: RPG Economyを数値検算する
 
@@ -167,6 +194,9 @@ Applicableなら [longform_mystery_craft.md](../ink-scenario-creator/references/
 | 全EDまたはEDクラス | | | |
 | 不可逆選択・資源枯渇 | | | |
 | 固定コマンド挙動 | | | |
+| 脱出の段階発見・再訪・誤操作復帰 | | | |
+| 脱出の規模下限・意味のある手数 | | | |
+| 行動結果→本文ありsceneの表示境界 | | | |
 | MCP `scene` / `choices` / `input` | | | |
 | MCP `status` / `public_status` | | | |
 
@@ -176,6 +206,8 @@ Applicableなら [longform_mystery_craft.md](../ink-scenario-creator/references/
 - テストが存在しない場合は `MISSING`。テストが走っていないのに「緑」と書かない。
 - `public_status` は必ず宣言する。HP・消耗品・公開装備・状態・現在地など必要な公開状態を含め、解法・真相・勝敗・正解値・隠しアイテムを含めない。
 - 本文中の手動ステータス表示はMCP `status` の代替ではない。
+- knot名や `->` の位置からページを推測せず、実際の `GameSession.scene` と `choices` を確認する。行動結果の後で導入・状態説明を出す場所／sceneへ入り直す場合は、結果ページに次の本文が混ざらず `つぎへ` 1件で止まり、選択後に場所本文と固定コマンドが出ることを検証する。
+- 結果本文を挟まない通常移動・キャンセル、調査結果から本文なしメニュー／短い対象質問へ戻る経路には、冗長な `つぎへ` がないことも確認する。
 - RPGでは、必須装備なし／あり、回復使用、ごり押し敗北、資源枯渇後ED、代表数値を確認する。
 
 ### Step 9: 機械結果を本文と照合する
@@ -188,10 +220,10 @@ Applicableなら [longform_mystery_craft.md](../ink-scenario-creator/references/
 
 ## 4. 重大度
 
-- **Blocker**：主構造のハーネス不採用、到達不能、重大ソフトロック、虚偽のエンディング契約、必須MCP状態欠落、真相と操作規則の根本矛盾。
-- **Major**：重要な因果・コストを理解できない、RPG経済不成立、無警告の不可逆ロックアウト、中心因果モデルの矛盾、前出し／後出し。
-- **Moderate**：認知操作の反復、伏線の重複無効化、局所的なペース・供給・余剰マージンの問題。
-- **Minor**：用語、語り口、局所的な明瞭性。
+- **Blocker**：主構造のハーネス不採用、必須対象が名詞当てに依存、到達不能、重大ソフトロック、虚偽のエンディング契約、必須MCP状態欠落、真相と操作規則の根本矛盾。可読性では、必須選択肢・入力案内・操作対象を理解できず、主操作を実行できない場合。
+- **Major**：重要な因果・コストを理解できない、脱出の主構造が偽ボリュームまたは規模に対して薄い、RPG経済不成立、無警告の不可逆ロックアウト、中心因果モデルの矛盾、前出し／後出し。可読性では、難しい熟語・専門語・独自語が作品全体に広がり、目標・仕組み・手がかり・結果を追えず、広い書き直しが必要な場合。
+- **Moderate**：認知操作の反復、伏線の重複無効化、局所的なペース・供給・余剰マージンの問題。可読性では、一場面または一章で難語や独自語が繰り返され、読み直しが続く場合。
+- **Minor**：一部の用語、語り口、一文だけの局所的な明瞭性。文脈から意味が取れ、重要な行動・手がかり・感情を失わない場合に限る。
 
 RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_design_preflight.md) の重大度を使う。主人公・欲求・来訪理由・任務・成功条件・個人的損失・継続理由のいずれかが欠ける、または最終使命が決戦前に成立しない場合はBlockerとする。偽の職業／動機選択、未形成の関係への献身要求、作者推奨回答のスコア採点、無料解答によるRPG経済消失はMajorとする。
 
@@ -234,6 +266,10 @@ RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_des
 
 [rpg_design_preflight.md](./references/rpg_design_preflight.md) のテンプレートを使い、最初に `判定: READY / NOT READY` を置く。続けてBlocker、Major、Moderate、開幕契約、作品の約束、使命の因果列、主人公置換・動機削除・帰還可能性、偽選択、関係形成、主題の実演、RPG資源経済、固定コマンド計画、実装後に必要な検証を出す。BlockerまたはMajorが一つでもあれば `NOT READY` とする。
 
+### 脱出設計プレフライト
+
+[escape_exploration_review.md](./references/escape_exploration_review.md) のテンプレートを使い、最初に `判定: READY / NOT READY` を置く。続けてBlocker、Major、Moderate、規模実測表、探索面マップ、依存グラフ、アイテム×対象マトリクス、手がかりと錠、意味のある手数、回復可能性・公開境界、偽ボリューム、実装後に必要な検証を出す。BlockerまたはMajorが一つでもあれば `NOT READY` とする。
+
 ### Ink完成品レビュー
 
 1. 対象・変更範囲・適用パック
@@ -241,7 +277,7 @@ RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_des
 3. Major
 4. Moderate
 5. Minor
-6. 構造別スコアカード（理解、コマンド、RPG経済、推理、状態、テスト）
+6. 構造別スコアカード（理解・可読性、コマンド、脱出探索、RPG経済、推理、状態、テスト）
 7. 検証表（PASS / FAIL / MISSING / NOT RUN）
 8. 良くなった点・保持すべき点
 9. 人間が最終確認すべき点 1〜3件
