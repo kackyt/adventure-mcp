@@ -6,7 +6,6 @@ VAR public_status = "place"
 LIST Inventory = waxed_cord, copper_tool, curved_glass, ceramic_piece, brass_sleeve, notched_brass, optical_glass
 VAR bag = ()
 
-VAR phase = 1
 VAR locker_entry = ""
 
 VAR shutter_parts_seen = false
@@ -15,7 +14,6 @@ VAR shutter_open = false
 VAR rigged_tool = false
 VAR mural_parts_seen = false
 VAR mural_fact_seen = false
-VAR meridian_seen = false
 VAR grate_parts_seen = false
 VAR grate_target_seen = false
 VAR grate_moved = false
@@ -23,11 +21,9 @@ VAR cord_exposed = false
 VAR dock_door_parts_seen = false
 
 VAR locker_seen = false
-VAR locker_dial_seen = false
 VAR locker_open = false
 VAR ceramic_exposed = false
 VAR rack_seen = false
-VAR glass_cradle_seen = false
 VAR curved_exposed = false
 VAR ledger_seen = false
 VAR ledger_clue_seen = false
@@ -38,16 +34,12 @@ VAR south_bed_seen = false
 VAR west_bed_seen = false
 VAR north_bed_seen = false
 VAR trellis_seen = false
-VAR repair_pocket_seen = false
 VAR copper_exposed = false
 VAR tank_seen = false
-VAR tank_parts_seen = false
 VAR cage_pulled = false
 
 VAR pump_seen = false
-VAR pump_parts_seen = false
 VAR priming_seen = false
-VAR crank_seen = false
 VAR manifold_seen = false
 VAR valve_controls_seen = false
 VAR gauge_seen = false
@@ -77,9 +69,7 @@ VAR socket_open = false
 VAR release_armed = false
 
 VAR bell_seen = false
-VAR bell_parts_seen = false
 VAR clamps_seen = false
-VAR service_recess_seen = false
 VAR sleeve_exposed = false
 VAR lever_seen = false
 VAR plate_seen = false
@@ -163,7 +153,6 @@ VAR cradle_release = false
 -> v1_look
 
 === v1_look_meridian ===
-~ meridian_seen = true
 地図の中央には、南北を結ぶ一本線と、切れこみのある板を置くような四角い穴がある。
 ただし穴は浅く、これは形と向きを見せる見本のようだ。同じ印のある本物のしかけを探す必要がありそうだ。
 -> v1_look
@@ -290,7 +279,6 @@ VAR cradle_release = false
 -> v2_look
 
 === v2_look_locker_dials ===
-~ locker_dial_seen = true
 四つの数字の輪は左から右へ並ぶ。どの輪にも0から9までがあり、欠けた数字はない。
 よく使われた数字も、すりへっていて分からない。四つの数字を決めてレバーを動かすしかない。
 -> v2_look
@@ -307,7 +295,6 @@ VAR cradle_release = false
 -> v2_look
 
 === v2_look_glass_cradle ===
-~ glass_cradle_seen = true
 布を上げると、棚の奥に曲がったガラス管が一本あった。両端は欠けておらず、太さも同じだ。
 取れるように、手前へすべらせておく。
 ~ curved_exposed = true
@@ -476,7 +463,6 @@ VAR cradle_release = false
 -> v3_look
 
 === v3_look_repair_pocket ===
-~ repair_pocket_seen = true
 つる棚の小物入れを開ける。中には、先が浅く曲がった短い銅の棒が一本ある。
 持つ所に、細いひもを結ぶ穴がある。曲がった先を輪やかごにかけて、手前へ引くための道具だ。
 ~ copper_exposed = true
@@ -497,13 +483,11 @@ VAR cradle_release = false
 -> v3_look
 
 === v3_look_float ===
-~ tank_parts_seen = true
 大きなコルクのうきは、下のかごと細い金属の棒でつながっている。底の管から水が入れば、うきといっしょにかごも上がる作りだ。
 コルクはまだ水にうきそうだ。
 -> v3_look
 
 === v3_look_cage_guide ===
-~ tank_parts_seen = true
 かご用のレールは水そうの底から上へ続くが、最後は手前のふちから少し遠い。
 かごが上がっても、手だけでは届きにくい。先が曲がった細い道具なら、かごの輪にかけて引き寄せられそうだ。
 -> v3_look
@@ -614,7 +598,6 @@ VAR cradle_release = false
     水を入れる側の白い丸いあきから、丸くふさぐ部品がなくなっている。
 }
 どちらも道具を使わず、形の合う部品をはめられそうだ。
-~ pump_parts_seen = true
 -> v4_look
 
 === v4_look_glass_union ===
@@ -640,7 +623,6 @@ VAR cradle_release = false
 -> v4_look
 
 === v4_look_crank ===
-~ crank_seen = true
 水入れの回し棒は、この部屋に取りつけられた物で、持ち歩けない。持つ所と棒は、なめらかに動く。
 ポンプの二つのあきを直してから回せば、中へ水を送れそうだ。
 -> v4_look
@@ -787,7 +769,6 @@ VAR cradle_release = false
 北の壁では、リフトの下の太い押し棒が上がり、扉が開いた。同時に、温室へ向かう管から水の走る音がした。
 ~ pressure_raised = true
 ~ lift_open = true
-~ phase = 3
 -> result_to_place
 
 === v4_travel ===
@@ -1039,7 +1020,6 @@ VAR cradle_release = false
 ~ bell_seen = true
 脱出用の鐘には、人が出入りできる丸い扉がある。中には一人分のいす、空気の入った筒、手で動かすかじが見える。
 鐘の肩には黒い板がある。その下には、地図と同じまっすぐな一本線がついた差しこみ口があり、今はうすい金色のふたに守られている。
-~ bell_parts_seen = true
 -> v6_look
 
 === v6_look_buoyant_shell ===
@@ -1068,7 +1048,6 @@ VAR cradle_release = false
 -> v6_look
 
 === v6_look_service_recess ===
-~ service_recess_seen = true
 金具わきの小さなくぼみには、油のしみた布がある。その中に、短くて厚い金属の筒が入っている。片方の端には四角い穴があり、金具の四角いぼうにかぶせて回す物らしい。
 手前の留め金を外し、取れる場所まで出しておく。
 ~ sleeve_exposed = true
@@ -1252,7 +1231,6 @@ VAR cradle_release = false
     両手でひもを引き下ろす。大きな鉄の戸が、両わきの溝の塩をけずりながら上がり、天井の金具で止まった。作業室への道が開く。
     ひもをゆるめて棒を外す。棒もひもも手元に残った。
     ~ shutter_open = true
-    ~ phase = 2
     -> result_to_place
 - else:
     銅の棒の曲がった先は、高い所の輪にかかる。だが棒が短く、下から引き続けられない。力をかけると外れて床へ落ちた。

@@ -139,7 +139,8 @@ LIST GateStage = shut, released, open
 VAR gate_stage = shut
 
 === operate_latch ===
-{gate_stage == shut:
+{
+- gate_stage == shut:
     留め具は固く、今は途中までしか動かない。
 - gate_stage == released:
     ~ gate_stage = open
