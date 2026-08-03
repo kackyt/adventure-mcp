@@ -1,11 +1,11 @@
 ---
 title: "PLAYBOOK"
-version: "1.10.0"
+version: "1.11.0"
 status: "approved"
 created: "2026-06-01"
-updated: "2026-08-02"
+updated: "2026-08-03"
 owner: "kacky"
-ace_entry_count: 26
+ace_entry_count: 27
 tags: [ace, playbook, knowledge-management]
 references:
   - docs/ACE_FRAMEWORK.md
@@ -644,7 +644,7 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 | Category   | architecture |
 | Origin     | PR #28       |
 | Date       | 2026-08-02   |
-| Helpful    | 0            |
+| Helpful    | 1            |
 | Harmful    | 0            |
 | Status     | active       |
 
@@ -672,4 +672,24 @@ Playbook が 800 行を超えた場合、以下のように分割する：
 **Context**: PR #28 のシナリオ設計指針において、divert（`->`）のみではクライアント側がテキスト表示を止めない仕様に対して `+ [つぎへ]` を乱用するとプレイヤーのクリック回数が無駄に増えて UX を損なう懸念が整理された。
 
 **Action**: Ink シナリオ作成時、すでに他の選択肢で止まる場面や単なる行区切りでの `+ [つぎへ]` 配置を禁止し、章の区切りや劇的な展開切り替え時などの意図的な停止点にのみ絞って利用する。
+
+<a id="ace-31-1"></a>
+
+### ACE-31-1: Ink シナリオにおける未使用グローバル変数・ステート空間のクリーンアップ
+
+| フィールド | 値           |
+| ---------- | ------------ |
+| Category   | coding       |
+| Origin     | PR #31       |
+| Date       | 2026-08-03   |
+| Helpful    | 0            |
+| Harmful    | 0            |
+| Status     | active       |
+
+**Insight**: Ink シナリオ内に未使用の `VAR` 定義や追跡不要な内部フラグが残っていると、ゲームエンジンのステート管理領域が無駄に拡大し、外部連携（MCP等）での状態可視化にノイズを与えるため定期的にクリーンアップする。
+
+**Context**: PR #31 で参照用作例シナリオ `sealed_guest_room.ink` を移動・整備した際、コードレビューで未使用グローバル変数の残存が指摘され、ゲームステート最適化のためクリーンアップが行われた。
+
+**Action**: シナリオの新規作成・作例化や静的解析ツール（`ink-dead-code-sweep` スキル等）の適用時に、使われていない `VAR` 定義を検出・除去し、ステート空間の最適化とコンテキストの透明性を保持する。
+
 
