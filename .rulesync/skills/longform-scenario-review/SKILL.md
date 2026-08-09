@@ -1,10 +1,11 @@
 ---
 name: longform-scenario-review
 description: >-
-  adventure-mcp の長編 Ink シナリオと、実装前のサバイバルRPG／脱出探索設計票を独立レビューするスキルです。推理・脱出探索・物語分岐・サバイバルRPGを対象に、
-  プレイヤー理解可能性、主人公・目的・当事者性、固定コマンド＋outcome-gating、脱出の探索量と依存、RPG資源経済、視点・因果・伏線・結末条件、Ink/MCP契約、
-  到達性と機械検証を監査します。「シナリオをレビューして」「RPG設計プレフライト」「脱出設計プレフライト」「破綻を洗って」「ハーネスに従っているか」
-  「主人公がなぜ動くか検査して」「探索量／数値バランスを検査して」等の依頼、実装前の設計ゲート、または長編完成後の自己チェックに使用します。
+  adventure-mcp の長編 Ink シナリオ、新作企画ピッチ、実装前のサバイバルRPG／脱出探索設計票を独立レビューするスキルです。
+  既存作との差、ゲーム単体の面白さ、認知負荷収支、難易度と尺、プレイヤー理解可能性、主人公・目的・当事者性、固定コマンド＋outcome-gating、
+  RPG資源経済、視点・因果・伏線・結末条件、Ink/MCP契約、到達性を監査します。「企画をレビューして」「ゲーム性を検査して」
+  「RPG設計プレフライト」「脱出設計プレフライト」「破綻を洗って」「主人公がなぜ動くか検査して」「探索量／数値バランスを検査して」等の依頼、
+  実装前の企画・設計ゲート、または長編完成後の自己チェックに使用します。
 ---
 
 # Longform Scenario Review
@@ -19,9 +20,10 @@ description: >-
 
 - **RPG設計プレフライト**：対象がサバイバル・RPGの設計票、プロット、人物・資源設計、またはユーザーがRPG設計プレフライトを指定した場合
 - **脱出設計プレフライト**：対象が脱出・探索の設計票、探索面マップ、依存グラフ、アイテム・手数設計、またはユーザーが脱出設計プレフライトを指定した場合
+- **企画ピッチ・プレフライト**：対象が新作の企画案、30秒ピッチ、ゲームループ、難易度・尺の自己申告、またはユーザーが企画の採否・既存作との差・ゲーム性をレビューするよう求めた場合
 - **Ink完成品レビュー**：対象が実行可能な `.ink`、生成JSON、関連テストを含む完成または改修シナリオの場合
 
-RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_design_preflight.md)、脱出設計プレフライトでは [escape_exploration_review.md](./references/escape_exploration_review.md) を読み、各書の手順と `READY / NOT READY` 出力を使う。完成Ink用のStep 1〜9、コンパイル、MCP実機確認を設計段階へ要求しない。機械検証は `NOT RUN（設計段階）` と記録し、それ自体を欠陥扱いしない。
+企画ピッチ・プレフライトでは [game_first_concept_gate.md](../ink-scenario-creator/references/game_first_concept_gate.md) を読む。RPG設計プレフライトでは同書に加えて [rpg_design_preflight.md](./references/rpg_design_preflight.md)、脱出設計プレフライトでは同書に加えて [escape_exploration_review.md](./references/escape_exploration_review.md) を読み、各書の手順と `READY / NOT READY` 出力を使う。完成Ink用のStep 1〜9、コンパイル、MCP実機確認を設計段階へ要求しない。機械検証は `NOT RUN（設計段階）` と記録し、それ自体を欠陥扱いしない。
 
 設計プレフライトの `READY` は完成承認ではない。READY後に `ink-scenario-creator` が実装し、完成後に本スキルのInk完成品レビューをもう一度行う。脱出・探索の完成品では、Escape ExplorationとFixed Command HarnessをともにApplicableとして監査する。
 
@@ -33,6 +35,7 @@ RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_des
 
 | パック | Applicable / N/A | 適用条件 | 必読 |
 |---|---|---|---|
+| **Concept & Game-First** | 新作企画・設計票・完成新作なら Applicable | 既存差分、30秒ピッチ、ゲーム単体、認知負荷収支、局面差、難易度・尺を検査 | [game_first_concept_gate.md](../ink-scenario-creator/references/game_first_concept_gate.md) |
 | **RPG Design Preflight** | RPG設計票なら Applicable | 主人公・目的・当事者性・使命・資源・コマンドを実装前に検査 | [rpg_design_preflight.md](./references/rpg_design_preflight.md) |
 | **Common Comprehension** | 原則 Applicable | すべての長編。プレイヤー向け文章の可読性、開幕契約、因果、意思決定を検査。設計プレフライトでは開幕契約と因果だけを適用 | [common_comprehension_review.md](./references/common_comprehension_review.md) |
 | **Fixed Command Harness** | 謎・探索操作・RPG操作があれば Applicable | 世界への働きかけを固定コマンドで実演する作品。設計段階では計画表を検査 | [fixed_command_harness_review.md](./references/fixed_command_harness_review.md) |
@@ -78,6 +81,21 @@ RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_des
 - 各章・階層で「自分は今何を理解し、次に何をすると思うか」を記録する。
 - 初見の予想結末を一度言語化し、意図した反転・ドラマチックアイロニー・既視感と比較する。
 - 作者だけが知るフラグや後の説明で、現在の理解不足を正当化しない。
+
+### Step 2.5: Concept & Game-Firstを実施する
+
+新作企画、設計票、完成新作では [game_first_concept_gate.md](../ink-scenario-creator/references/game_first_concept_gate.md) を全項目実施する。
+
+- 固有名詞なしのゲーム文と物語文が二文で成立するか。
+- 近い既存3作・直近却下案との企画指紋を比較したか。
+- 物語を外しても、30秒ごとの判断と上達差が残るか。
+- NPCや目的欄の指示を消化するおつかい／チェックリストになっていないか。
+- 意味のある局面表で、前局面と判断基準が変わるか。
+- 新語・新規則を覚える負担が、複数の異なる判断へ返ってくるか。
+- 世界・操作・資源・局面の四層を同時に新しくしていないか。
+- 難易度ラベルと尺が、コールドプレイの試行数・迷い・実測で裏付けられるか。
+
+設計段階では目標難易度・目標尺と検証計画を審査する。完成品では実測を優先し、大半が一観察・一発正解ならNormal表記を認めずEasyへ下げるか再設計する。説明量が多いのに同じ判断を繰り返す作品は、可読性だけでなく「認知負荷に対するゲーム上の返りがない」独立の欠陥として扱う。
 
 ### Step 3: Common Comprehensionを実施する
 
@@ -220,8 +238,8 @@ Applicableなら [longform_mystery_craft.md](../ink-scenario-creator/references/
 
 ## 4. 重大度
 
-- **Blocker**：主構造のハーネス不採用、必須対象が名詞当てに依存、到達不能、重大ソフトロック、虚偽のエンディング契約、必須MCP状態欠落、真相と操作規則の根本矛盾。可読性では、必須選択肢・入力案内・操作対象を理解できず、主操作を実行できない場合。
-- **Major**：重要な因果・コストを理解できない、脱出の主構造が偽ボリュームまたは規模に対して薄い、RPG経済不成立、無警告の不可逆ロックアウト、中心因果モデルの矛盾、前出し／後出し。可読性では、難しい熟語・専門語・独自語が作品全体に広がり、目標・仕組み・手がかり・結果を追えず、広い書き直しが必要な場合。
+- **Blocker**：主構造のハーネス不採用、必須対象が名詞当てに依存、到達不能、重大ソフトロック、虚偽のエンディング契約、必須MCP状態欠落、真相と操作規則の根本矛盾。企画では、固有名詞を外すと何をして勝つゲームか説明できず、物語設定が主ゲームループを代用している場合。可読性では、必須選択肢・入力案内・操作対象を理解できず、主操作を実行できない場合。
+- **Major**：重要な因果・コストを理解できない、脱出の主構造が偽ボリュームまたは規模に対して薄い、RPG経済不成立、無警告の不可逆ロックアウト、中心因果モデルの矛盾、前出し／後出し。企画では、指示消化のおつかい、同じ認知操作による水増し、直近作と中核5軸の3軸以上が重なる再利用、高い認知負荷に対して判断が一種類、実測がEasy相当なのにNormalと主張する状態。可読性では、難しい熟語・専門語・独自語が作品全体に広がり、目標・仕組み・手がかり・結果を追えず、広い書き直しが必要な場合。
 - **Moderate**：認知操作の反復、伏線の重複無効化、局所的なペース・供給・余剰マージンの問題。可読性では、一場面または一章で難語や独自語が繰り返され、読み直しが続く場合。
 - **Minor**：一部の用語、語り口、一文だけの局所的な明瞭性。文脈から意味が取れ、重要な行動・手がかり・感情を失わない場合に限る。
 
@@ -264,7 +282,11 @@ RPG設計プレフライトでは [rpg_design_preflight.md](./references/rpg_des
 
 ### RPG設計プレフライト
 
-[rpg_design_preflight.md](./references/rpg_design_preflight.md) のテンプレートを使い、最初に `判定: READY / NOT READY` を置く。続けてBlocker、Major、Moderate、開幕契約、作品の約束、使命の因果列、主人公置換・動機削除・帰還可能性、偽選択、関係形成、主題の実演、RPG資源経済、固定コマンド計画、実装後に必要な検証を出す。BlockerまたはMajorが一つでもあれば `NOT READY` とする。
+[rpg_design_preflight.md](./references/rpg_design_preflight.md) のテンプレートを使い、最初に `判定: READY / NOT READY` を置く。続けてBlocker、Major、Moderate、企画指紋と既存差分、30秒ピッチ、ゲーム単体、認知負荷収支、難易度・尺、開幕契約、作品の約束、使命の因果列、主人公置換・動機削除・帰還可能性、偽選択、関係形成、主題の実演、RPG資源経済、固定コマンド計画、実装後に必要な検証を出す。BlockerまたはMajorが一つでもあれば `NOT READY` とする。
+
+### 企画ピッチ・プレフライト
+
+[game_first_concept_gate.md](../ink-scenario-creator/references/game_first_concept_gate.md) の判定表を使い、最初に `判定: READY / NOT READY` を置く。続けて近い既存作、固有名詞なしの二文、基本ループ、プレイヤー主体性、意味のある局面、認知負荷収支、難易度・尺、棄却した代案と理由を出す。一つでもFAILなら `NOT READY` とする。
 
 ### 脱出設計プレフライト
 
